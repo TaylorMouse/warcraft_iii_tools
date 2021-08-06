@@ -11,7 +11,7 @@
 
 */
 
-rollout GriffonStudios_AnimationWindow "Animation Window 2" 
+rollout GriffonStudios_AnimationWindow "Animation Window" 
     width:250 
     height:750
 (
