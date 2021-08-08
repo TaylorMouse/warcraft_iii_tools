@@ -3,7 +3,7 @@
     | Importer for Warcraft III mdx (old version = version 800 )
     
     .COPYRIGHT
-    | �2021 Griffon Studios
+    | (c)2021 Griffon Studios
     
     .AUTHOR
     | Taylor Mouse
@@ -101,7 +101,13 @@ STRUCT WC3_MDX800
         format "Reading %\n" tag.name
         struct ribb800 
             ( size, headerSize, name, id, parentId, flags, above, below, edgesSec, edgesLife, gravity, vAlpha, vColor, flipbookRows, flipbookCols, flipBookSlot, mtlsId,
-              KGTR, KGRT, KGSC, KRHA, KRHB, KRAL, KRCO, KRTX, KRVS
+              KGTR, KGRT, KGSC, 
+              KRHA, -- height above
+              KRHB, -- height below
+              KRAL, -- alpha
+              KRCO, -- color
+              KRTX, -- textureSlot
+              KRVS  -- visibility
             )
         
         fseek stream tag.offset #seek_set
