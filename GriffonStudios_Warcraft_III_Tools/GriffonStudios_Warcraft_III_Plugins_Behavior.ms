@@ -491,7 +491,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
     | Warcraft III Behavior UI Plugin
 
 */
-plugin simpleManipulator WarcraftIII_Behavior_2
+plugin simpleManipulator WarcraftIII_Behavior
     name: "Behavior"
     classID:#(0x4ed7437d, 0x5051bafe)
     category:"Warcraft III"
@@ -507,7 +507,6 @@ plugin simpleManipulator WarcraftIII_Behavior_2
     rollout params "Behavior Properties"
     (
         button btnOpenEditor  "Open behaior editor" height:30 width:150 align:#left offset:[-5,0]
-    
         
         on btnOpenEditor pressed do
         (
