@@ -178,7 +178,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         list_globalSequences.Items.AddRange range
         spn_nbrFrames.value = 0
     )
-    function ParseListOfObjects=
+    function DecodeListOfObjects=
     (
         if behaviorObj == undefined then return undefined
         
@@ -188,28 +188,38 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
             
             local glbs = wcIII_glbs groupId:(parts[1] as integer) nbrFrames:(parts[2] as integer )
             
-            for i=3 to parts.count by 2 do
+            for i=3 to parts.count by 3 do
             (
                 
-                local glbsObj = wcIII_glbs_obj objName:parts[i] flags:(parts[i+1] as integer )
+                local glbsObj = wcIII_glbs_obj objName:parts[i] typ:parts[i+1] flags:(parts[i+2] as integer )
                 
-                ParseFlags glbsObj
+                DecodeFlags glbsObj
                 
             )
             append glbs_list glbs
         )
     )
-    function ParseFlags glbsObj=
+    function EncodeListOfObjects=
     (
-        /*
-        0x01    MATERIAL_UV
-        0x02    MATERIAL_ALPHA
-        0x10    OBJ_POSITION
-        0x20    OBJ_ROTATION
-        0x40    OBJ_SCALE
-        0x80    VISIBILITY_TRACK
-        0x100   
-        */  
+        if behaviorObj == undefined then return undefined
+
+        behaviorObj.ListOfObjects = #()
+
+        for glbs in glbs_list do
+        (
+            local str = ( glbs.groupId as string ) + "|" + ( glbs.nbrFrames as string ) + "|"
+
+            for obj in glbs.objectList do
+            (
+                str += obj.objName + "|" + obj.type  + "|" + obj.flags as string 
+            )
+
+            append behaviorObj.ListOfObjects str
+        )
+    )
+
+    function DecodeFlags glbsObj=
+    (
         
         if ( bit.and glbsObj.flags 0x01 > 0 ) then glbsObj.MATERIAL_UV = true
         if ( bit.and glbsObj.flags 0x02 > 0 ) then glbsObj.MATERIAL_ALPHA = true
@@ -220,6 +230,30 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         
         
     )
+    function EncodeFlags glbsObj=
+    (
+        /*
+        0x01    MATERIAL_UV
+        0x02    MATERIAL_ALPHA
+        0x10    OBJ_POSITION
+        0x20    OBJ_ROTATION
+        0x40    OBJ_SCALE
+        0x80    VISIBILITY_TRACK
+        0x100   
+        */  
+        local flags = 0
+        if ( glbsObj.MATERIAL_UV ) then flags += 0x01
+        if ( glbsObj.MATERIAL_ALPHA ) then flags += 0x02
+        if ( glbsObj.OBJ_POSITION ) then flags += 0x10
+        if ( glbsObj.OBJ_ROTATION ) then flags += 0x20
+        if ( glbsObj.OBJ_SCALE ) then flags += 0x40
+        if ( glbsObj.VISIBILITY_TRACK ) then flags += 0x80
+
+        glbsObj.flags = flags
+        
+        
+    )
+
     function UpdateObjectList=
     (
         current_glbs_object = undefined
@@ -344,12 +378,37 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
     /* 
         CHECKBOXES
     */
-    on cbx_material_uv     changed theState do ( current_glbs_object.MATERIAL_UV = theState )
-    on cbx_material_alpha  changed theState do ( current_glbs_object.MATERIAL_ALPHA = theState )
-    on cbx_object_position changed theState do ( current_glbs_object.OBJ_POSITION = theState )
-    on cbx_object_rotation changed theState do ( current_glbs_object.OBJ_ROTATION = theState )
-    on cbx_object_scale    changed theState do ( current_glbs_object.OBJ_SCALE = theState )
-    on cbx_visibility      changed theState do ( current_glbs_object.VISIBILITY_TRACK = theState )
+    on cbx_material_uv changed theState do 
+    ( 
+        
+        current_glbs_object.MATERIAL_UV = theState 
+        EncodeFlags current_glbs_object
+    )
+    on cbx_material_alpha  changed theState do 
+    ( 
+        current_glbs_object.MATERIAL_ALPHA = theState 
+        
+    )
+    on cbx_object_position changed theState do 
+    (
+        current_glbs_object.OBJ_POSITION = theState 
+        EncodeFlags current_glbs_object
+    )
+    on cbx_object_rotation changed theState do 
+    (
+        current_glbs_object.OBJ_ROTATION = theState
+        EncodeFlags current_glbs_object
+    )
+    on cbx_object_scale    changed theState do 
+    ( 
+        current_glbs_object.OBJ_SCALE = theState 
+        EncodeFlags current_glbs_object
+    )
+    on cbx_visibility      changed theState do 
+    ( 
+        current_glbs_object.VISIBILITY_TRACK = theState 
+        EncodeFlags current_glbs_object
+    )
     
     /*
         LISTS
@@ -408,9 +467,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         list_globalSequences.Columns.Add "GroupId" 80
         list_globalSequences.Columns.Add "Nbr Frames" -2
         try(list_globalSequences.Items.clear()) catch() 
-            
-        
-
 
         list_selectedObjects.View = (dotNetClass "System.Windows.Forms.View").Details
         list_selectedObjects.FullRowSelect = true
@@ -420,7 +476,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         list_selectedObjects.Columns.Add "Type" -2
         try(list_selectedObjects.Items.clear()) catch() 
 
-        ParseListOfObjects()
+        DecodeListOfObjects()
         UpdateGlobalSequenceList()
         ResetCheckBoxes()
     )
@@ -502,6 +558,7 @@ plugin simpleManipulator WarcraftIII_Behavior_2
     
 )
 clearlistener()
+
 
 
 
