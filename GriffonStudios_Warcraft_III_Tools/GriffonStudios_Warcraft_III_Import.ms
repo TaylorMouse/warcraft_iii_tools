@@ -773,6 +773,9 @@ STRUCT WC3_MDX800
     function ReadGLBS800 stream tag=
     (
         format "Reading %\n" tag.name
+        
+        struct wcIII_glbs ( groupId, nbrFrames, objectList = #(), encodedString )
+        
         fseek stream tag.offset #seek_set
         local glbs = #()
         
@@ -780,8 +783,10 @@ STRUCT WC3_MDX800
         
         for i=1 to nbr do 
         (
-            local endFrame = (GriffonStudios_Helpers.RoundToFrame (readLong stream)) + 10
-            append glbs endFrame
+            endFrame = (GriffonStudios_Helpers.RoundToFrame (readLong stream))
+            local g = wcIII_glbs groupId:i nbrFrames:endFrame
+            
+            append glbs g
         )
         if WC3_MDX800_DEBUG then print glbs
         return glbs
@@ -1435,6 +1440,7 @@ STRUCT WC3_MDX800
                 for anim in h.KGRT.KG do
                 (
                     local t = anim.Time + 10
+                    if h.KGRT.glbsId > 0 then t = anim.Time
                     local q = anim.Point
                     
                     if ( prevTime == t ) then continue else prevTime = t
@@ -1459,6 +1465,7 @@ STRUCT WC3_MDX800
                     for anim in h.KGTR.KG do
                     (
                         local t = anim.Time + 10
+                        if h.KGTR.glbsId > 0 then t = anim.Time
                         local p = anim.Point
 
                         if ( prevTime == t ) then continue else prevTime = t
@@ -1485,6 +1492,7 @@ STRUCT WC3_MDX800
                 for anim in h.KGSC.KG do
                 (
                     local t = anim.Time + 10
+                    if h.KGSC.glbsId > 0 then t = anim.Time
                     local p = anim.Point
                         
                     if ( prevTime == t ) then continue else prevTime = t
@@ -1877,54 +1885,154 @@ STRUCT WC3_MDX800
     ),
     function BuildGLBS800 mdx=
     (
+        format "%\n" mdx.glbs
         if mdx.glbs == undefined or mdx.glbs.count == 0 then return undefined
+     
+        struct wcIII_glbs_obj 
+        ( 
+            objRef, 
+            objName, 
+            flags, 
+            type, 
+            MATERIAL_UV = false, 
+            MATERIAL_ALPHA = false, 
+            MATERIAL_EMISSIVE = false,
+            OBJ_POSITION = false, 
+            OBJ_ROTATION = false, 
+            OBJ_SCALE = false, 
+            VISIBILITY_TRACK = false 
+        )
+        
         format "Building Global Sequence Behaviors\n"
         
+        local glbsFound = false
+        
         /*
-            The actual frame from the mdx is NOT used
             The global animation always starts at frame 0 and the last frame on the trackbar is used for export
         */
-        local listOfObjects = #()
-        
         for i=1 to mdx.BONE.count do
         (
-            if (mdx.BONE[i].KGSC != undefined ) then
-                if (mdx.BONE[i].KGSC.glbsId  > 0 ) then 
-                    appendifUnique listOfObjects mdx.BONE[i].boneRef
-            
-            if (mdx.BONE[i].KGRT != undefined ) then
-                if (mdx.BONE[i].KGRT.glbsId  > 0 ) then 
-                    appendifUnique listOfObjects mdx.BONE[i].boneRef
-            
-            if (mdx.BONE[i].KGTR != undefined ) then
-                if (mdx.BONE[i].KGTR.glbsId  > 0 ) then 
-                    appendifUnique listOfObjects mdx.BONE[i].boneRef
-            
+            if ( mdx.BONE[i].KGSC != undefined or mdx.BONE[i].KGRT != undefined or mdx.BONE[i].KGTR != undefined ) then 
+            (
+                local glbsObj = wcIII_glbs_obj objRef:mdx.BONE[i].boneRef objName:mdx.BONE[i].boneRef.name type:#BONE
+                local glbsId = 0
+                
+                if (mdx.BONE[i].KGSC != undefined ) then
+                (
+                    if (mdx.BONE[i].KGSC.glbsId  > 0 ) then 
+                    (
+                        glbsId = mdx.BONE[i].KGSC.glbsId
+                        glbsObj.OBJ_SCALE = true
+                    )
+                )
+                if (mdx.BONE[i].KGRT != undefined ) then
+                (
+                    if (mdx.BONE[i].KGRT.glbsId  > 0 ) then 
+                    (
+                        glbsId = mdx.BONE[i].KGRT.glbsId
+                        glbsObj.OBJ_ROTATION = true
+                    )
+                )
+                if (mdx.BONE[i].KGTR != undefined ) then
+                (
+                    if (mdx.BONE[i].KGTR.glbsId  > 0 ) then 
+                    (
+                        glbsId = mdx.BONE[i].KGTR.glbsId
+                        glbsObj.OBJ_ROTATION = true
+                    )
+                )
+                if glbsId > 0 then(
+                    append mdx.glbs[glbsId].objectList glbsObj
+                    glbsFound = true
+                )
+            )
+        )
+        
+        for i=1 to mdx.HELP.count do
+        (
+            if ( mdx.HELP[i].KGSC != undefined or mdx.HELP[i].KGRT != undefined or mdx.HELP[i].KGTR != undefined ) then 
+            (
+                local glbsObj = wcIII_glbs_obj objRef:mdx.HELP[i].helperRef objName:mdx.HELP[i].helperRef.name type:#DUMMY
+                local glbsId = 0
+                
+                if (mdx.HELP[i].KGSC != undefined and mdx.HELP[i].KGSC.glbsId  > 0 ) then
+                (
+                    glbsId = mdx.HELP[i].KGSC.glbsId
+                    glbsObj.OBJ_SCALE = true
+                )
+                if (mdx.HELP[i].KGRT != undefined and mdx.HELP[i].KGRT.glbsId  > 0 ) then
+                (
+                    glbsId = mdx.HELP[i].KGRT.glbsId
+                    glbsObj.OBJ_ROTATION = true
+                )
+                if (mdx.HELP[i].KGTR != undefined and mdx.HELP[i].KGTR.glbsId > 0 ) then
+                (
+                    glbsId = mdx.HELP[i].KGTR.glbsId
+                    glbsObj.OBJ_ROTATION = true
+                )
+                if glbsId > 0 then (
+                    append mdx.glbs[glbsId].objectList glbsObj
+                    glbsFound = true
+                )
+            )
         )
         
         for i=1 to mdx.MTLS.count do
         (
             for map in mdx.MTLS[i].maps do
             (
-                if map.txanId > 0 then 
+                if ( map.kmta != undefined or map.kmte != undefined or map.kmtf != undefined or map.txanId > 0 ) then
                 (
-                    for obj in objects do
-                        if obj.material == mdx.MTLS[i].materialRef then appendifUnique listOfObjects obj
+                    local glbsObj = wcIII_glbs_obj objRef:mdx.MTLS[i].materialRef objName:mdx.MTLS[i].materialRef.name type:#MATERIAL
+                    local glbsId = 0
+                    
+                    if ( map.kmta != undefined and map.kmta.glbsId > 0 ) then
+                    (
+                        glbsId = map.kmta.glbsId
+                        glbsObj.MATERIAL_ALPHA = true
+                    )
+                    if ( map.kmte != undefined and map.kmte.glbsId > 0 ) then
+                    (
+                        glbsId = map.kmte.glbsId
+                        glbsObj.MATERIAL_EMISSIVE = true
+                    )
+                    if ( map.txanId > 0 ) then 
+                    (
+                        local txan = mdx.TXAN[map.txanId]
+                        
+                        if ( txan != undefined and txan.glbsId > 0 ) then 
+                        ( 
+                            glbsId = txan.glbsId
+                            glbsObj.MATERIAL_UV = true
+                        )
+                    )
+                    
+                    if ( glbsId > 0 ) then (
+                        append mdx.glbs[glbsId].objectList glbsObj
+                        glbsFound = true
+                    )
                     
                     
                 )
+                
             )
-
         )
-        if WC3_MDX800_DEBUG then print listOfObjects
         
-        if listOfObjects.count > 0 then
+        if WC3_MDX800_DEBUG then print mdx.glbs
+        
+        if (glbsFound) then
         (
             local layer = GriffonStudios_Helpers.CreateLayer "Global Sequence"  
             local behavior = WarcraftIII_Behavior()
             layer.addNode behavior
+            
+            local listOfObjects = Warcraft_III_Helpers.EncodeBehaviorFlags mdx
+            
             behavior.listOfObjects = listOfObjects
         )
+        
+        
+        
     ),
     function Import file=
     (
