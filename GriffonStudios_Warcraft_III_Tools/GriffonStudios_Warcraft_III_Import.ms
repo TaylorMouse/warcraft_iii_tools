@@ -499,7 +499,14 @@ STRUCT WC3_MDX800
         local currentOffset = tag.Offset
         local geoa = #()
         
-        struct geoa800 (size, opacity, geoId, color, type, KGAO)
+        struct geoa800 (size, 
+            geoId,   --> referencing mesh object
+            opacity, --> starting opacity
+            color,   --> starting color
+            type,    --> base animation type
+            KGAO,    --> animated opacity
+            KGAC     --> animated color
+        )
         
         while ( totalSize > 0 ) do
         (
@@ -512,21 +519,21 @@ STRUCT WC3_MDX800
             g.color     = color (readFloat stream * 255.0) (readFloat stream * 255.0) (readFloat stream * 255.0) 1.0
             g.geoId     = readlong stream + 1
             
-            if ( g.size > 28 ) then 
-            local kgao = GriffonStudios_Helpers.ReadFixedString stream 4
+            if ( g.size > 28 ) then (
+            for a=1 to 2 do
+            (
+                local animBlock = GriffonStudios_Helpers.ReadFixedString stream 4
+                if ( animBlock == "KGAO" ) then g.KGAO = Warcraft_III_Helpers.ReadFloatAnim stream 
+                if ( animBlock == "KGAC" ) then g.KGAC = Warcraft_III_Helpers.ReadColorAnim stream 
+            ))
 
-            if ( kgao == "KGAO" ) then
-                g.KGAO = Warcraft_III_Helpers.ReadFloatAnim stream
-            else
-                fseek stream -4 #seek_cur
-            
             append geoa g
-            if WC3_MDX800_DEBUG then print g
+            --if WC3_MDX800_DEBUG then 
+                print g
             totalSize -= g.Size
             currentOffset += g.Size
         )
     
-        --print geoa
         return geoa
     ),
     function ReadVERS800 stream tag=
@@ -1761,6 +1768,9 @@ STRUCT WC3_MDX800
         
         if( geoa == undefined ) then return undefined 
         format "Applying Mesh Alpha Animations \n"
+        
+        struct wc3_opacity_track ( time, point )
+        
         for a in geoa do
         (
             local theMesh = geos[a.GeoId].meshRef
@@ -1779,8 +1789,22 @@ STRUCT WC3_MDX800
                 theMesh.Visibility = on
                 theMesh.Visibility.controller = on_off()
 
-                for anim in a.KGAO.KG do 
-                    with animate on at time ( anim.Time + 10 )
+                local opacity_tracks = #()
+                
+                append opacity_tracks (wc3_opacity_track time:0 point:a.opacity)
+                
+                --> set the visibility per sequence back to its original state
+                for seq in mdx.seqs do
+                    append opacity_tracks (wc3_opacity_track time:(seq.StartFrame - 2) point:a.opacity)
+                
+                for anim in a.KGAO.KG do
+                    append opacity_tracks ( wc3_opacity_track time:(anim.Time + 10) point:anim.point )
+                
+                -- sort the opacity_tracks by time
+                opacity_tracks = Warcraft_III_Helpers.SortTrack opacity_tracks
+                
+                for anim in opacity_tracks do 
+                    with animate on at time anim.Time
                         if (anim.point == 1) then 
                             theMesh.Visibility = on
                         else
@@ -1885,7 +1909,6 @@ STRUCT WC3_MDX800
     ),
     function BuildGLBS800 mdx=
     (
-        format "%\n" mdx.glbs
         if mdx.glbs == undefined or mdx.glbs.count == 0 then return undefined
      
         struct wcIII_glbs_obj 
@@ -1897,6 +1920,7 @@ STRUCT WC3_MDX800
             MATERIAL_UV = false, 
             MATERIAL_ALPHA = false, 
             MATERIAL_EMISSIVE = false,
+            MATERIAL_COLOR = false,
             OBJ_POSITION = false, 
             OBJ_ROTATION = false, 
             OBJ_SCALE = false, 
@@ -2120,29 +2144,3 @@ STRUCT WC3_MDX800
         setArrowCursor() 
     )
 )
-
-
-
--- Example RIBB : F:\Blizzard\Warcraft III\Extracted\Units\Undead\Shade\Shade.mdx
-
--- WC3_MDX800_DEBUG = false
--- WC3_READONLY = false
--- WC3_DEBUG = false
--- WC3_MDX = undefined
-
--- KMTA : 
---  WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Extracted\Units\Undead\Necromancer\Necromancer.mdx"
-
--- KMTF :
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Extracted\Units\Creeps\SeaElemental\SeaElemental.mdx"
-
-
-
--- Tests --
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Extracted\Units\Creeps\LavaSpawn\LavaSpawn.mdx"
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Extracted\Doodads\Dungeon\Props\SewerVent\SewerVent1.mdx"
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Extracted\Units\Demon\Infernal\Infernal.mdx"
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft III\Warcraft III Models\Abomination\Abomination.mdx"
---WC3_MDX800.Import @"F:\Blizzard\Warcraft - Reforged\Warcraft III\Spartan Warrior\Spartan Warrior\SpartanWarrior.mdx"
--- WC3_MDX800.Import @"F:\Blizzard\Warcraft - Reforged\Warcraft III\Paladin (Sword)\Paladin (Sword)\PaladinSword.mdx"
-
