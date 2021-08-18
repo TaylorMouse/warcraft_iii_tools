@@ -1362,5 +1362,21 @@ STRUCT Warcraft_III_Helpers
         )
         
         return listOfObjects
+    ),
+    function SortTrack dummy_track=
+    (
+        
+        for t in dummy_track do
+        for i=2 to dummy_track.count do
+        (
+            local tmp = dummy_track[i-1]
+            if tmp.time > dummy_track[i].time then
+            (
+                dummy_track[i-1] = dummy_track[i]
+                dummy_track[i] = tmp
+            )
+            
+        )
+        return dummy_track
     )
 )
