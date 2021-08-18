@@ -20,9 +20,9 @@
 
 
 */
-GLOBAL B_DEBUG = TRUE
+GLOBAL B_DEBUG = FALSE
 
-rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:740
+rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
 (
     local behaviorObj
     local glbs_list = #()
@@ -80,7 +80,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:740
         checkbox cbx_material_emiss     "Emissive" tooltip:"Check if the emissive of the material needs to be part of the global sequence"
         checkbox cbx_material_uv        "UV"       tooltip:"Check if the uv unwrap of the material needs to be part of the global sequence"
         
-        groupbox grpBox_01 "Material" height:100 width:230 offset:[-5,-100]
+        groupbox grpBox_01 "Material" height:80 width:230 offset:[-5,-80]
         
         checkbox cbx_object_position    "Postion"           tooltip:"Check if the position of the object needs to be part of the global sequence" offset:[0,20]
         checkbox cbx_object_rotation    "Rotation"          tooltip:"Check if the rotation of the object needs to be part of the global sequence"
@@ -90,6 +90,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:740
         groupbox grpBox_02 "Transformations" height:100 width:230 offset:[-5,-100]
     )
 
+    label lblcopy "\x00A9 2021 - Created by Taylor Mouse"
+    
     /* 
         FUNCTIONS 
     */
