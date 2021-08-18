@@ -86,9 +86,9 @@ rollout Warcraft_III_Tools_Dialog "Warcraft 3 Tools" width:250 height:500
         filein "GriffonStudios_Warcraft_III_Export.ms"
 
         
-        WC3_MDX800_DEBUG = false
-        WC3_DEBUG = false
-        WC3_INVERT_UVW = false
+        GLOBAL WC3_MDX800_DEBUG = false
+        GLOBAL WC3_DEBUG = false
+        GLOBAL WC3_INVERT_UVW = false
         ddl_Extension.selection = 1
         
         local sharedFolder = getinisetting configFile "WarcraftIII" "SharedTextureFolder"
@@ -155,12 +155,18 @@ rollout Warcraft_III_Tools_Dialog "Warcraft 3 Tools" width:250 height:500
     
     on btn_import pressed do
     (
+        if cbx_Debugmode.checked then 
+        (
+            WC3_MDX800_DEBUG = true
+            WC3_DEBUG = true
+        )
         
         file = getOpenFileName caption:"Import MDX" types:"WarCraft III MDX File (*.mdx)|*.mdx|All Files (*.*)|*.*|" historyCategory:"ImportWarcraftIIImdx"
 
         if ( file != undefined and doesfileexist file ) then 
+--         try (
             WC3_MDX800.Import file
-        
+--         ) catch ( messagebox "Not everything was imported correctly!" )
     )
     on btn_getallkeys pressed do
     (

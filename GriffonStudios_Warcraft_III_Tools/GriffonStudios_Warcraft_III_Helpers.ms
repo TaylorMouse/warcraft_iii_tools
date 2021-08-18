@@ -1336,5 +1336,31 @@ STRUCT Warcraft_III_Helpers
             
         )
         
+    ),
+    function EncodeBehaviorFlags mdx=
+    (
+        local listOfObjects = #()
+        for glbs in mdx.glbs do
+        (
+            local str = ( glbs.groupId as string ) + "|" + ( glbs.nbrFrames as string ) + "|"
+            for obj in glbs.objectList do
+            (
+                obj.flags = 0
+                if ( obj.MATERIAL_UV )       then obj.flags += 0x01
+                if ( obj.MATERIAL_ALPHA )    then obj.flags += 0x02
+                if ( obj.MATERIAL_EMISSIVE ) then obj.flags += 0x04
+                
+                if ( obj.OBJ_POSITION )      then obj.flags += 0x10
+                if ( obj.OBJ_ROTATION )      then obj.flags += 0x20
+                if ( obj.OBJ_SCALE )         then obj.flags += 0x40
+                if ( obj.VISIBILITY_TRACK )  then obj.flags += 0x80
+            
+                str += obj.objName + "|" + obj.type  + "|" + obj.flags as string + "|"
+            )
+
+            append listOfObjects str
+        )
+        
+        return listOfObjects
     )
 )

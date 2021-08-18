@@ -22,7 +22,7 @@
 */
 GLOBAL B_DEBUG = TRUE
 
-rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
+rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:740
 (
     local behaviorObj
     local glbs_list = #()
@@ -40,6 +40,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         type, 
         MATERIAL_UV = false, 
         MATERIAL_ALPHA = false, 
+        MATERIAL_EMISSIVE = false,
+        
         OBJ_POSITION = false, 
         OBJ_ROTATION = false, 
         OBJ_SCALE = false, 
@@ -73,12 +75,19 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         
         label lbl_selectedObject "Selected object: <none>" align:#left
         
-        checkbox cbx_material_alpha     "Material Alpha" tooltip:"Check if the alpha of the material needs to be part of the global sequence"
-        checkbox cbx_material_uv        "Material UV"    tooltip:"Check if the uv unwrap of the material needs to be part of the global sequence"
-        checkbox cbx_object_position    "Postion"        tooltip:"Check if the position of the object needs to be part of the global sequence"
-        checkbox cbx_object_rotation    "Rotation"       tooltip:"Check if the rotation of the object needs to be part of the global sequence"
-        checkbox cbx_object_scale       "Scale"          tooltip:"Check if the scale of the object needs to be part of the global sequence"
-        checkbox cbx_visibility         "Visibility"     tooltip:"Check if the visibility track of the object needs to be part of the global sequence"
+                
+        checkbox cbx_material_alpha     "Alpha"    tooltip:"Check if the alpha of the material needs to be part of the global sequence" offset:[0,20]
+        checkbox cbx_material_emiss     "Emissive" tooltip:"Check if the emissive of the material needs to be part of the global sequence"
+        checkbox cbx_material_uv        "UV"       tooltip:"Check if the uv unwrap of the material needs to be part of the global sequence"
+        
+        groupbox grpBox_01 "Material" height:100 width:230 offset:[-5,-100]
+        
+        checkbox cbx_object_position    "Postion"           tooltip:"Check if the position of the object needs to be part of the global sequence" offset:[0,20]
+        checkbox cbx_object_rotation    "Rotation"          tooltip:"Check if the rotation of the object needs to be part of the global sequence"
+        checkbox cbx_object_scale       "Scale"             tooltip:"Check if the scale of the object needs to be part of the global sequence"
+        checkbox cbx_visibility         "Visibility"        tooltip:"Check if the visibility track of the object needs to be part of the global sequence"
+        
+        groupbox grpBox_02 "Transformations" height:100 width:230 offset:[-5,-100]
     )
 
     /* 
@@ -107,6 +116,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         
         if ( bit.and glbsObj.flags 0x01 > 0 ) then glbsObj.MATERIAL_UV = true
         if ( bit.and glbsObj.flags 0x02 > 0 ) then glbsObj.MATERIAL_ALPHA = true
+        if ( bit.and glbsObj.flags 0x04 > 0 ) then glbsObj.MATERIAL_EMISSIVE = true
         if ( bit.and glbsObj.flags 0x10 > 0 ) then glbsObj.OBJ_POSITION = true
         if ( bit.and glbsObj.flags 0x20 > 0 ) then glbsObj.OBJ_ROTATION = true
         if ( bit.and glbsObj.flags 0x40 > 0 ) then glbsObj.OBJ_SCALE = true
@@ -125,13 +135,9 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         cbx_visibility.enabled = false
         cbx_material_uv.enabled = false
         cbx_material_alpha.enabled = false
+        cbx_material_emiss.enabled = false
         
-        cbx_object_position.checked = false
-        cbx_object_rotation.checked = false
-        cbx_object_scale.checked = false
-        cbx_visibility.checked = false
-        cbx_material_uv.checked = false
-        cbx_material_alpha.checked = false
+        
     )
 
     function UpdateGlobalSequenceList =
@@ -215,6 +221,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
                 (
                     cbx_material_uv.enabled = true
                     cbx_material_alpha.enabled = true
+                    cbx_material_emiss.enabled = true
+                    
                     
                 )
                 else
@@ -226,6 +234,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
                 )
                 cbx_material_uv.checked = obj.MATERIAL_UV
                 cbx_material_alpha.checked = obj.MATERIAL_ALPHA
+                cbx_material_emiss.checked = obj.MATERIAL_EMISSIVE
+                
                 cbx_object_position.checked = obj.OBJ_POSITION
                 cbx_object_rotation.checked = obj.OBJ_ROTATION
                 cbx_object_scale.checked = obj.OBJ_SCALE
@@ -251,12 +261,14 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         0x100   
         */  
         local flags = 0
-        if ( glbsObj.MATERIAL_UV ) then flags += 0x01
-        if ( glbsObj.MATERIAL_ALPHA ) then flags += 0x02
-        if ( glbsObj.OBJ_POSITION ) then flags += 0x10
-        if ( glbsObj.OBJ_ROTATION ) then flags += 0x20
-        if ( glbsObj.OBJ_SCALE ) then flags += 0x40
-        if ( glbsObj.VISIBILITY_TRACK ) then flags += 0x80
+        if ( glbsObj.MATERIAL_UV )       then flags += 0x01
+        if ( glbsObj.MATERIAL_ALPHA )    then flags += 0x02
+        if ( glbsObj.MATERIAL_EMISSIVE ) then flags += 0x04
+        
+        if ( glbsObj.OBJ_POSITION )      then flags += 0x10
+        if ( glbsObj.OBJ_ROTATION )      then flags += 0x20
+        if ( glbsObj.OBJ_SCALE )         then flags += 0x40
+        if ( glbsObj.VISIBILITY_TRACK )  then flags += 0x80
 
         glbsObj.flags = flags
         
@@ -273,8 +285,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         if B_DEBUG then format "selectedGroupId: %\n" selectedGroupId
         if B_DEBUG then format "Nbr Objects %\n" glbs_list[selectedGroupId].objectList.count
             
-    
-        
         
         for i = 1 to glbs_list[selectedGroupId].objectList.count do
         (
@@ -407,6 +417,12 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         current_glbs_object.MATERIAL_ALPHA = theState 
         EncodeFlags current_glbs_object
     )
+    on cbx_material_emiss changed theState do 
+    ( 
+        current_glbs_object.MATERIAL_EMISSIVE = theState 
+        EncodeFlags current_glbs_object
+    )
+    
     on cbx_object_position changed theState do 
     (
         current_glbs_object.OBJ_POSITION = theState 
@@ -504,15 +520,11 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
     /*
         CLOSE
     */
-    
     on Warcraft_III_BehaviorEditor close do
     (
         SaveEverything()
-        
     )
-
 )
-    
 
 /*
 
@@ -593,12 +605,4 @@ plugin simpleManipulator WarcraftIII_Behavior
         BuildGizmo #( [-12.5,25,0], [6.5,25,0], [12.5,20,0], [12.5,11,0], [6.5,5,0], [-12.5,5,0],[-12.5,25,0] )
         BuildGizmo #( [-12.5,-25,0], [6.5,-25,0], [12.5,-20,0], [12.5,-11,0], [6.5,-5,0], [-12.5,-5,0],[-12.5,-25,0] )
     )
-    
 )
-clearlistener()
-
-
-
-
-
-
