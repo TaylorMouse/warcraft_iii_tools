@@ -9,7 +9,7 @@
     | Taylor Mouse
 
     .CHANGELOG
-    | 0.7 - z Encoding and decoding the list of objects from the plugin into the UI
+    | 0.7 - Encoding and decoding the list of objects from the plugin into the UI
     | 0.6 - Added the UV & Alpha
     | 0.5 - Specify the pos, rot, scale, visibility track of bones and helpers
     | 0.4 - Added the pick material functionality
@@ -46,8 +46,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         VISIBILITY_TRACK = false 
     )
     
-    
-    
     label lblTitle "Behavior Object:" align:#left 
     label lblBehaviorObjName "" align:#left 
     
@@ -64,6 +62,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         
         label lbl_selectedGroup "Selected Group: <none>" align:#left
     )
+
     group "Properties"
     (
         button btn_AddObj "Pick Object" height:25 width:75 align:#left tooltip:"Pick an object to add to the global sequence list, object type must be dummy or bone."
@@ -103,6 +102,20 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         return exists
         
     )
+    function DecodeFlags glbsObj=
+    (
+        
+        if ( bit.and glbsObj.flags 0x01 > 0 ) then glbsObj.MATERIAL_UV = true
+        if ( bit.and glbsObj.flags 0x02 > 0 ) then glbsObj.MATERIAL_ALPHA = true
+        if ( bit.and glbsObj.flags 0x10 > 0 ) then glbsObj.OBJ_POSITION = true
+        if ( bit.and glbsObj.flags 0x20 > 0 ) then glbsObj.OBJ_ROTATION = true
+        if ( bit.and glbsObj.flags 0x40 > 0 ) then glbsObj.OBJ_SCALE = true
+        if ( bit.and glbsObj.flags 0x80 > 0 ) then glbsObj.VISIBILITY_TRACK = true
+        
+        if B_DEBUG then format "Decoding Flags: %\n" glbsObj
+        
+        return glbsObj
+    )
     function ResetCheckBoxes =
     (
         current_glbs_object = undefined
@@ -120,6 +133,70 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         cbx_material_uv.checked = false
         cbx_material_alpha.checked = false
     )
+
+    function UpdateGlobalSequenceList =
+    (
+        
+        local range = #()
+        for obj in glbs_list do
+        (
+            local item = dotNetObject "System.Windows.Forms.ListViewItem" ( obj.groupId as string )
+            item.SubItems.Add ( obj.nbrFrames as string )
+            append range item
+        )
+        list_globalSequences.Items.clear()
+        list_globalSequences.Items.AddRange range
+        spn_nbrFrames.value = 0
+    )
+
+    function DecodeListOfObjects=
+    (
+        if behaviorObj == undefined then return undefined
+        
+        if B_DEBUG then format "List of Objects to decode %\n" behaviorObj.ListOfObjects
+        
+        for str in behaviorObj.ListOfObjects do
+        (
+            local parts = filterstring str "|"
+            
+            local glbs = wcIII_glbs groupId:(parts[1] as integer) nbrFrames:(parts[2] as integer )
+            
+            for i=3 to parts.count by 3 do
+            (
+                local glbsObj = wcIII_glbs_obj objName:parts[i] type:parts[i+1] flags:(parts[i+2] as integer )
+                
+                append glbs.objectList ( DecodeFlags glbsObj )
+            )
+           
+            append glbs_list glbs
+        )
+    
+        if B_DEBUG then format "glbs_list:  %\n" glbs_list
+
+    )
+    
+    function EncodeListOfObjects=
+    (
+        if behaviorObj == undefined then return undefined
+
+        behaviorObj.ListOfObjects = #()
+
+        for glbs in glbs_list do
+        (
+            local str = ( glbs.groupId as string ) + "|" + ( glbs.nbrFrames as string ) + "|"
+
+            for obj in glbs.objectList do
+            (
+                str += obj.objName + "|" + obj.type  + "|" + obj.flags as string + "|"
+            )
+
+            append behaviorObj.ListOfObjects str
+        )
+        
+        if B_DEBUG then format "Encoding List of Objects %\n" behaviorObj.ListOfObjects
+    )
+
+
     function UpdateCheckBoxes =
     (
         local name = selectedObject.subitems.item[0].text
@@ -160,86 +237,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
             )
         )
         
-    )
-    function UpdateGlobalSequenceList =
-    (
-        behaviorObj.listOfObjects = #()
-
-        for glbs in glbs_list do
-        (
-            local str = ( glbs.groupId as string ) + "|" + ( glbs.nbrFrames as string )
-            
-            for obj in glbs.objectList do
-            (
-                str += "|" + obj.name
-                
-            )
-            append behaviorObj.listOfObjects str
-        )
-        
-        local range = #()
-        for obj in glbs_list do
-        (
-            local item = dotNetObject "System.Windows.Forms.ListViewItem" ( obj.groupId as string )
-            item.SubItems.Add ( obj.nbrFrames as string )
-            append range item
-        )
-        list_globalSequences.Items.clear()
-        list_globalSequences.Items.AddRange range
-        spn_nbrFrames.value = 0
-    )
-    function DecodeListOfObjects=
-    (
-        if behaviorObj == undefined then return undefined
-        
-        for str in behaviorObj.ListOfObjects do
-        (
-            local parts = filterstring str "|"
-            
-            local glbs = wcIII_glbs groupId:(parts[1] as integer) nbrFrames:(parts[2] as integer )
-            
-            for i=3 to parts.count by 3 do
-            (
-                
-                local glbsObj = wcIII_glbs_obj objName:parts[i] typ:parts[i+1] flags:(parts[i+2] as integer )
-                
-                DecodeFlags glbsObj
-                
-            )
-            append glbs_list glbs
-        )
-    )
-    function EncodeListOfObjects=
-    (
-        if behaviorObj == undefined then return undefined
-
-        behaviorObj.ListOfObjects = #()
-
-        for glbs in glbs_list do
-        (
-            local str = ( glbs.groupId as string ) + "|" + ( glbs.nbrFrames as string ) + "|"
-
-            for obj in glbs.objectList do
-            (
-                str += obj.objName + "|" + obj.type  + "|" + obj.flags as string 
-            )
-
-            append behaviorObj.ListOfObjects str
-        )
-    )
-
-    function DecodeFlags glbsObj=
-    (
-        
-        if ( bit.and glbsObj.flags 0x01 > 0 ) then glbsObj.MATERIAL_UV = true
-        if ( bit.and glbsObj.flags 0x02 > 0 ) then glbsObj.MATERIAL_ALPHA = true
-        if ( bit.and glbsObj.flags 0x10 > 0 ) then glbsObj.OBJ_POSITION = true
-        if ( bit.and glbsObj.flags 0x20 > 0 ) then glbsObj.OBJ_ROTATION = true
-        if ( bit.and glbsObj.flags 0x40 > 0 ) then glbsObj.OBJ_SCALE = true
-        if ( bit.and glbsObj.flags 0x80 > 0 ) then glbsObj.VISIBILITY_TRACK = true
         
     )
-
     function EncodeFlags glbsObj=
     (
         /*
@@ -261,25 +260,43 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
 
         glbsObj.flags = flags
         
+        if B_DEBUG then format "Encoding Flags: %\n" glbsObj
         
+
     )
 
     function UpdateObjectList=
     (
         current_glbs_object = undefined
         local range = #()
-        for obj in glbs_list[selectedGroupId].objectList do
+        
+        if B_DEBUG then format "selectedGroupId: %\n" selectedGroupId
+        if B_DEBUG then format "Nbr Objects %\n" glbs_list[selectedGroupId].objectList.count
+            
+    
+        
+        
+        for i = 1 to glbs_list[selectedGroupId].objectList.count do
         (
-            local item = dotNetObject "System.Windows.Forms.ListViewItem" ( obj.objName as string )
+            local obj = glbs_list[selectedGroupId].objectList[i]
+            if B_DEBUG then format " - %\n" obj
+            
+            local item = dotNetObject "System.Windows.Forms.ListViewItem" obj.objName
             item.SubItems.Add ( obj.type as string )
             
             append range item
         )
         list_selectedObjects.Items.clear()
         list_selectedObjects.Items.AddRange range
-        
+
     )
 
+    function SaveEverything=
+    (
+        EncodeListOfObjects()   
+        
+    )
+    
     /* 
         BUTTONS 
     */
@@ -300,6 +317,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
 
         UpdateGlobalSequenceList()
         spn_nbrFrames.value = 0
+        
     )
     on btn_DeleteGroup pressed do
     (
@@ -329,7 +347,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         if B_DEBUG then 
         (
             local d = wcIII_glbs_obj()
-            format "Empty object %\n" d
             format "Selected object: %\n" obj
         )
         
@@ -453,14 +470,16 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
     (
         for obj in objects do 
         (
-            if classof obj == WarcraftIII_Behavior_2 then 
+            if classof obj == WarcraftIII_Behavior then 
             (
                 format "Behavior Object : %\n" obj
                 behaviorObj = obj
                 lblBehaviorObjName.Text = behaviorObj.Name
+                DecodeListOfObjects()
                 exit
             )
         )
+        
         list_globalSequences.View = (dotNetClass "System.Windows.Forms.View").Details
         list_globalSequences.FullRowSelect = true
         list_globalSequences.gridLines = true
@@ -477,9 +496,19 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
         list_selectedObjects.Columns.Add "Type" -2
         try(list_selectedObjects.Items.clear()) catch() 
 
-        DecodeListOfObjects()
+        
         UpdateGlobalSequenceList()
         ResetCheckBoxes()
+    )
+    
+    /*
+        CLOSE
+    */
+    
+    on Warcraft_III_BehaviorEditor close do
+    (
+        SaveEverything()
+        
     )
 
 )
@@ -493,7 +522,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:660
 */
 plugin simpleManipulator WarcraftIII_Behavior
     name: "Behavior"
-    classID:#(0x4ed7437d, 0x5051bafe)
+    classID:#(0x23d03ade, 0x7a156813)
     category:"Warcraft III"
 (
     local selectedItem
@@ -506,10 +535,12 @@ plugin simpleManipulator WarcraftIII_Behavior
     
     rollout params "Behavior Properties"
     (
-        button btnOpenEditor  "Open behaior editor" height:30 width:150 align:#left offset:[-5,0]
+        button btnOpenEditor  "Open behavior editor" height:30 width:150 align:#left offset:[-5,0]
         
         on btnOpenEditor pressed do
         (
+            
+            
             if Warcraft_III_BehaviorEditor.open then 
                 DestroyDialog Warcraft_III_BehaviorEditor
             CreateDialog Warcraft_III_BehaviorEditor
@@ -521,9 +552,12 @@ plugin simpleManipulator WarcraftIII_Behavior
     (
         on mousePoint click do
         (
+            
+            
             case click of
                  (
                     1:(
+                     
                         nodeTM.translation = [0,0,0]
                         listOfItems = #()
                         #stop

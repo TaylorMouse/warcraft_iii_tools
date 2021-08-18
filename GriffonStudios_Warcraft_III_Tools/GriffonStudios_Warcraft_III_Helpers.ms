@@ -348,7 +348,7 @@ STRUCT Warcraft_III_Helpers
     (
         struct glbs800 ( type, frame, objRef ) 
         local glbs = #()
-        
+        mdx.GLBS = glbs
         -- get the behavior object --> there can be only 1 !!
         local behaviorObj = Warcraft_III_Helpers.GetBehavior()
         
