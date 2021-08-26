@@ -344,10 +344,8 @@ STRUCT Warcraft_III_Helpers
         
         mdx.seqs = seqs
     ),
-    
-    function GetGLBS mdx=
+    function GetBehaviorObject = 
     (
-        
         local behaviorObj = Warcraft_III_Helpers.GetBehavior()
         if behaviorObj == undefined then return undefined
         
@@ -377,10 +375,17 @@ STRUCT Warcraft_III_Helpers
                 append glbs.objectList ( Warcraft_III_Helpers.DecodeFlags glbsObj )
             )
             append glbs_list glbs
+            if WC3_MDX800_DEBUG then print glbs
         )
-        mdx.GLBS = glbs_list
-        return mdx.GLBS
+        return glbs_list 
         
+    ),
+    function GetGLBS mdx=
+    (
+        mdx.glbs = Warcraft_III_Helpers.GetBehaviorObject()
+
+        format "% \n" mdx.glbs
+        return mdx.glbs
     ),
     /* get the unique list of TEXS */
     function GetTEXS mdx=
@@ -1019,9 +1024,13 @@ STRUCT Warcraft_III_Helpers
             if ( obj.objectType == #wc3Bone ) then type = "Bone"
             if ( obj.objectType == #wc3HELP ) then type = "Dummy"
             
-            for glbs in mdx.glbs do (
-                for g in glbs.objectList do (
-                    if ( g.type == (obj.objectType as string) and g.objName == obj.name ) then (
+            for glbs in mdx.glbs do 
+            (
+                for g in glbs.objectList do 
+                (
+                    
+                    if ( g.type == (obj.objectType as string) and g.objName == obj.name ) then 
+                    (
                         glbsId = glbs.groupID - 1
                         theGlbs = glbs
                         exit
@@ -1063,16 +1072,19 @@ STRUCT Warcraft_III_Helpers
         
         local kgtr = anim800()
         
-        local behaviorObj = Warcraft_III_Helpers.GetBehavior()
+        local behaviorObj = Warcraft_III_Helpers.GetBehaviorObject()
         
         if behaviorObj != undefined then 
-        for b = 1 to behaviorObj.listOfObjects.count do
-            if behaviorObj.listOfObjects[b].name == obj.name then 
+        (
+            for glbs in behaviorObj do
+            for b = 1 to glbs.objectList.count do
+            if glbs.objectList[b].objName == obj.name then 
             ( 
-                kgtr.glbsId = b - 1
+                kgtr.glbsId = glbs.groupID - 1
                 exit
             )
-            
+         
+        )            
             
         kgtr.nbrKeys = numkeys cntrl
         kgtr.size += kgtr.nbrKeys * 16 --> framenbr, position
@@ -1105,15 +1117,18 @@ STRUCT Warcraft_III_Helpers
         kgrt.nbrKeys = numkeys ctrl
         kgrt.size += kgrt.nbrKeys * 20
          
-        local behaviorObj = Warcraft_III_Helpers.GetBehavior()
+        local behaviorObj = Warcraft_III_Helpers.GetBehaviorObject()
         
-        if behaviorObj != undefined then
-        for b = 1 to behaviorObj.listOfObjects.count do
-            if behaviorObj.listOfObjects[b].name == obj.name then 
+        if behaviorObj != undefined then 
+        (
+            for glbs in behaviorObj do
+            for b = 1 to glbs.objectList.count do
+            if glbs.objectList[b].objName == obj.name then 
             ( 
-                kgrt.glbsId = b - 1
+                kgtr.glbsId = glbs.groupID - 1
                 exit
             )
+        )   
                
         for key in ctrl.keys do
         (
@@ -1141,15 +1156,18 @@ STRUCT Warcraft_III_Helpers
         kgsc.nbrKeys = numkeys obj.scale.controller
         kgsc.size += kgsc.nbrKeys * 16
            
-        local behaviorObj = Warcraft_III_Helpers.GetBehavior()
+        local behaviorObj = Warcraft_III_Helpers.GetBehaviorObject()
         
-        if behaviorObj != undefined then
-        for b = 1 to behaviorObj.listOfObjects.count do
-            if behaviorObj.listOfObjects[b].name == obj.name then 
+        if behaviorObj != undefined then 
+        (
+            for glbs in behaviorObj do
+            for b = 1 to glbs.objectList.count do
+            if glbs.objectList[b].objName == obj.name then 
             ( 
-                kgsc.glbsId = b - 1
+                kgtr.glbsId = glbs.groupID - 1
                 exit
             )
+        )   
         
         for k=1 to kgsc.nbrKeys do
         (

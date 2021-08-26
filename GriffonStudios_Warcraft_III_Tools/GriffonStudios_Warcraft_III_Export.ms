@@ -99,10 +99,7 @@ STRUCT WC3_MDX800_EXPORTER
     function WriteGLBS800 mdx=
     (
         if mdx.glbs == undefined then return undefined
-
-        
-        Warcraft_III_Helpers.GetGLBS mdx
-       
+      
         if mdx.glbs.count > 0 then (
         
             format "Writing GLBS\n"
@@ -234,9 +231,12 @@ STRUCT WC3_MDX800_EXPORTER
         
         -- is this part of a glbs ?
         local glbsId = -1
-        for m=1 to mdx.GLBS.Count do
-            if mdx.GLBS[m].objRef.name == mat.name and mdx.GLBS[m].type == #MATERIAL then glbsId = m - 1
-               
+        if mdx.GLBS != undefined then 
+        (
+            for glbs in mdx.GLBS do
+                for obj in glbs.objectList do
+                    if ( obj.objName == mat.name and obj.type == "material" and obj.MATERIAL_ALPHA == true ) then glbsId = glbs.groupID - 1
+        )   
         
         
         -- Write KMTA
@@ -406,24 +406,21 @@ STRUCT WC3_MDX800_EXPORTER
         
         local totalSize = 0
         
-        local behavior = Warcraft_III_Helpers.GetBehavior()
-        
         for obj in mdx.allObjects do
         (
             if ( obj.ObjectType == #wc3BONE ) then
             (
                 totalSize += obj.totalSize + 8 --> headersize + geosetid + geosetAnimId
                 
-                if ( behavior != undefined ) then 
+                if ( mdx.glbs != undefined ) then 
                 (
-                    for b in behavior.listOfObjects do 
-                    (
-                        if ( obj.objref.name == b.name and classof b == boneGeometry ) then 
-                        (
-                            obj.geosetId = 2
-                            obj.geosetAnimationId = 2
-                        )
-                    )
+                    for glbs in mdx.glbs do
+                        for glbs_obj in glbs.objectList do
+                            if ( glbs_obj.objName == obj.name and glbs_obj.type == "bone" ) then 
+                            (
+                                obj.geosetId = 2
+                                obj.geosetAnimationId = 2
+                            )
                 )
             )
         )
