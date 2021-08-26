@@ -139,7 +139,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
         cbx_material_alpha.enabled = false
         cbx_material_emiss.enabled = false
         
-        
     )
 
     function UpdateGlobalSequenceList =
@@ -218,14 +217,15 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
             
             if ( obj.objName == name and (obj.type as string) == type ) then 
             (
+                
                 current_glbs_object = obj
-                if ( obj.type == #MATERIAL ) then
+                if ( obj.type == #MATERIAL or obj.type == "material" ) then
                 (
+                
                     cbx_material_uv.enabled = true
                     cbx_material_alpha.enabled = true
                     cbx_material_emiss.enabled = true
-                    
-                    
+                
                 )
                 else
                 (

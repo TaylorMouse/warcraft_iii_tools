@@ -1972,6 +1972,7 @@ STRUCT WC3_MDX800
             )
         )
         
+        if mdx.HELP != undefined then (
         for i=1 to mdx.HELP.count do
         (
             if ( mdx.HELP[i].KGSC != undefined or mdx.HELP[i].KGRT != undefined or mdx.HELP[i].KGTR != undefined ) then 
@@ -1999,7 +2000,7 @@ STRUCT WC3_MDX800
                     glbsFound = true
                 )
             )
-        )
+        ))
         
         for i=1 to mdx.MTLS.count do
         (
@@ -2024,9 +2025,9 @@ STRUCT WC3_MDX800
                     (
                         local txan = mdx.TXAN[map.txanId]
                         
-                        if ( txan != undefined and txan.glbsId > 0 ) then 
+                        if ( txan != undefined and txan.KTAT.glbsId > 0 ) then 
                         ( 
-                            glbsId = txan.glbsId
+                            glbsId = txan.KTAT.glbsId
                             glbsObj.MATERIAL_UV = true
                         )
                     )
