@@ -139,6 +139,14 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
         cbx_material_alpha.enabled = false
         cbx_material_emiss.enabled = false
         
+        cbx_object_position.checked = false
+        cbx_object_rotation.checked = false
+        cbx_object_scale.checked = false
+        cbx_visibility.checked = false
+        cbx_material_uv.checked = false
+        cbx_material_alpha.checked = false
+        cbx_material_emiss.checked = false
+        
     )
 
     function UpdateGlobalSequenceList =
@@ -152,6 +160,7 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
             append range item
         )
         list_globalSequences.Items.clear()
+        list_selectedObjects.Items.clear()
         list_globalSequences.Items.AddRange range
         spn_nbrFrames.value = 0
     )
@@ -301,6 +310,8 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
         list_selectedObjects.Items.clear()
         list_selectedObjects.Items.AddRange range
 
+        ResetCheckBoxes()
+        
     )
 
     function SaveEverything=
@@ -406,6 +417,25 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
         UpdateObjectList()
     )
     
+    on btn_DeleteObj pressed do
+    (
+        if selectedObject == undefined then return undefined
+
+        local name = selectedObject.subitems.item[0].text
+        local type = selectedObject.subitems.item[1].text
+        format "% % \n" name type
+        
+        local newArray = #()
+        for obj in glbs_list[selectedGroupId].objectList do
+        (
+            if ( obj.objName != name and obj.type != type ) then 
+                append newArray obj
+        )
+        glbs_list[selectedGroupId].objectList = newArray
+        
+        UpdateObjectList()
+    )
+    
     /* 
         CHECKBOXES
     */
@@ -474,7 +504,6 @@ rollout Warcraft_III_BehaviorEditor "Behavior Editor" width:250 height:745
         
         if selectedObject != undefined then 
         (
-
             lbl_selectedObject.Text = "Selected object: " + selectedObject.Text
         )
         UpdateCheckBoxes()
