@@ -344,87 +344,42 @@ STRUCT Warcraft_III_Helpers
         
         mdx.seqs = seqs
     ),
+    
     function GetGLBS mdx=
     (
-        struct glbs800 ( type, frame, objRef ) 
-        local glbs = #()
-        mdx.GLBS = glbs
-        -- get the behavior object --> there can be only 1 !!
-        local behaviorObj = Warcraft_III_Helpers.GetBehavior()
         
+        local behaviorObj = Warcraft_III_Helpers.GetBehavior()
         if behaviorObj == undefined then return undefined
         
-        for obj in behaviorObj.listOfObjects do
-        (
-            if ( classof obj == BoneGeometry or classof obj == Dummy ) then
-            (
-                local type = #BONE
-                local maxFrame  =  0f
-                local posTime   = (obj.pos.controller.keys[obj.pos.controller.keys.count].time as integer)/ticksperframe
-                local rotTime   = (obj.rotation.controller.keys[obj.rotation.controller.keys.count].time as integer)/ticksperframe
-                local scaleTime = (obj.scale.controller.keys[obj.scale.controller.keys.count].time as integer)/ticksperframe
+        local glbs_list = #()
+        struct wcIII_glbs ( groupId, nbrFrames, objectList = #() )
+        struct wcIII_glbs_obj 
+        ( 
+            objRef, objName, flags, type, 
+            MATERIAL_UV = false, 
+            MATERIAL_ALPHA = false, 
+            MATERIAL_EMISSIVE = false,
             
-                if (classof obj == Dummy ) then type = #DUMMY
-                
-                if posTime > maxFrame then maxFrame = posTime
-                if rotTime > maxFrame then maxFrame = rotTime
-                if scaleTime > maxFrame then maxFrame = scaleTime
-                
-                maxFrame = maxFrame * 1000 / 30 as integer
-                
-                append glbs ( glbs800 type:type  frame:maxFrame objRef:obj )
-            )
-            if ( classof obj == Editable_Mesh ) then
-            (
-                if ( classof obj.material == WarcraftIII_Standard ) then
-                (
-                    local maxFrame = 0
-                    
-                    if ( obj.material.diffuse_map.coords.u_offset.IsAnimated ) then 
-                    (
-                        local u_controller = obj.material.diffuse_map.coords.u_offset.controller
-                        local max_key_u = (u_controller.keys[u_controller.keys.count].time as integer)/ticksperframe
-                        maxFrame = max_key_u * 1000 / 30 as integer
-                    )
-                    if ( obj.material.diffuse_map.coords.v_offset.IsAnimated ) then 
-                    (
-                        local v_controller = obj.material.diffuse_map.coords.v_offset.controller
-                        local max_key_v = (v_controller.keys[v_controller.keys.count].time as integer)/ticksperframe
-                        max_key_v = max_key_v * 1000 / 30 as integer
-                        if maxFrame < max_key_v then maxFrame = max_key_v
-                    )
-                    if maxFrame > 0 then append glbs ( glbs800 type:#MATERIAL frame:maxFrame objRef:obj.material )
-                )
-                
-                if ( classof obj.material == CompositeMaterial ) then
-                (
-                    for subMat in obj.material.materialList do
-                    if ( classof subMat == WarcraftIII_Standard ) then 
-                    (
-                        local maxFrame = 0
-                        
-                        if ( subMat.diffuse_map.coords.u_offset.IsAnimated ) then 
-                        (
-                            local u_controller = subMat.diffuse_map.coords.u_offset.controller
-                            local max_key_u = (u_controller.keys[u_controller.keys.count].time as integer)/ticksperframe
-                            maxFrame = max_key_u * 1000 / 30 as integer
-                        )
-                        if ( subMat.diffuse_map.coords.v_offset.IsAnimated ) then 
-                        (
-                            local v_controller = subMat.diffuse_map.coords.v_offset.controller
-                            local max_key_v = (v_controller.keys[v_controller.keys.count].time as integer)/ticksperframe
-                            max_key_v = max_key_v * 1000 / 30 as integer
-                            if maxFrame < max_key_v then maxFrame = max_key_v
-                        )
-                        if maxFrame > 0 then append glbs ( glbs800 type:#MATERIAL frame:maxFrame objRef:obj.material )
-                    )
-                )
-            )
+            OBJ_POSITION = false, 
+            OBJ_ROTATION = false, 
+            OBJ_SCALE = false, 
+            VISIBILITY_TRACK = false 
         )
         
-        if ( WC3_MDX800_DEBUG ) then print glbs
-        
-        mdx.GLBS = glbs
+        for str in behaviorObj.ListOfObjects do
+        (
+            local parts = filterstring str "|"
+            local glbs = wcIII_glbs groupId:(parts[1] as integer) nbrFrames:(parts[2] as integer )
+
+            for i=3 to parts.count by 3 do
+            (
+                local glbsObj = wcIII_glbs_obj objName:parts[i] type:parts[i+1] flags:(parts[i+2] as integer )
+                append glbs.objectList ( Warcraft_III_Helpers.DecodeFlags glbsObj )
+            )
+            append glbs_list glbs
+        )
+        mdx.GLBS = glbs_list
+        return mdx.GLBS
         
     ),
     /* get the unique list of TEXS */
@@ -905,8 +860,13 @@ STRUCT Warcraft_III_Helpers
                 txanbIndex += 1
                 local ktat = anim800 numPts:uniqueFrames.count LineType:( mat.LineType - 1 )
                 
-                for m=1 to mdx.GLBS.Count do
-                    if mdx.GLBS[m].objRef.name == mat.name and mdx.GLBS[m].type == #MATERIAL then ktat.glbsId = m - 1
+                for glbs in mdx.GLBS do
+                (
+                    for obj in glbs.objectList do
+                    (
+                        if ( obj.type == "material" and obj.objName == mat.name ) then ktat.glbsId = glbs.groupID - 1
+                    )
+                )
                     
                 for frame in uniqueFrames do
                 (
@@ -941,9 +901,14 @@ STRUCT Warcraft_III_Helpers
                     txanbIndex += 1
                     local ktat = anim800 numPts:uniqueFrames.count LineType:subMat.LineType
                     
-                    for m=1 to mdx.GLBS.Count do
-                        if mdx.GLBS[m].objRef.name == mat.name and mdx.GLBS[m].type == #MATERIAL then ktat.glbsId = m - 1
-                        
+                    for glbs in mdx.GLBS do
+                    (
+                        for obj in glbs.objectList do
+                        (
+                            if ( obj.type == "material" and obj.objName == mat.name ) then ktat.glbsId = glbs.groupID - 1
+                        )
+                    )
+                    
                     for frame in uniqueFrames do
                     (
                         local kg = kg800()
@@ -1048,13 +1013,41 @@ STRUCT Warcraft_III_Helpers
         /* get the animations of these objects */
         for obj in allObjects do
         (
+            local theGlbs = undefined
+            local glbsId = -1
+            local type = undefined
+            if ( obj.objectType == #wc3Bone ) then type = "Bone"
+            if ( obj.objectType == #wc3HELP ) then type = "Dummy"
+            
+            for glbs in mdx.glbs do (
+                for g in glbs.objectList do (
+                    if ( g.type == (obj.objectType as string) and g.objName == obj.name ) then (
+                        glbsId = glbs.groupID - 1
+                        theGlbs = glbs
+                        exit
+                    )
+                )
+            )
+            
             obj.KGTR = Warcraft_III_Helpers.GetKGTR obj.objRef --> translation
             obj.KGRT = Warcraft_III_Helpers.GetKGRT obj.objRef --> rotation
             obj.KGSC = Warcraft_III_Helpers.GetKGSC obj.objRef --> scale
             
-            if obj.KGTR.nbrKeys > 0 then obj.TotalSize += obj.KGTR.Size
-            if obj.KGRT.nbrKeys > 0 then obj.TotalSize += obj.KGRT.Size
-            if obj.KGSC.nbrKeys > 0 then obj.TotalSize += obj.KGSC.Size
+            if obj.KGTR.nbrKeys > 0 then 
+            (
+                obj.TotalSize += obj.KGTR.Size
+                if ( glbsId > -1 and theGlbs.OBJ_POSITION  ) then obj.KGTR.glbsId = glbsId
+            )
+            if obj.KGRT.nbrKeys > 0 then 
+            (
+                obj.TotalSize += obj.KGRT.Size
+                if ( glbsId > -1 and theGlbs.OBJ_ROTATION  ) then obj.KGRT.glbsId = glbsId
+            )
+            if obj.KGSC.nbrKeys > 0 then 
+            (
+                obj.TotalSize += obj.KGSC.Size
+                if ( glbsId > -1 and theGlbs.OBJ_SCALE  ) then obj.KGSC.glbsId = glbsId
+            )
         )
         
         mdx.allObjects = allObjects
@@ -1363,6 +1356,24 @@ STRUCT Warcraft_III_Helpers
         
         return listOfObjects
     ),
+    function DecodeBehaviorFlags mdx=
+    (
+
+    ),
+    function DecodeFlags glbsObj=
+    (
+        if ( bit.and glbsObj.flags 0x01 > 0 ) then glbsObj.MATERIAL_UV = true
+        if ( bit.and glbsObj.flags 0x02 > 0 ) then glbsObj.MATERIAL_ALPHA = true
+        if ( bit.and glbsObj.flags 0x04 > 0 ) then glbsObj.MATERIAL_EMISSIVE = true
+        if ( bit.and glbsObj.flags 0x10 > 0 ) then glbsObj.OBJ_POSITION = true
+        if ( bit.and glbsObj.flags 0x20 > 0 ) then glbsObj.OBJ_ROTATION = true
+        if ( bit.and glbsObj.flags 0x40 > 0 ) then glbsObj.OBJ_SCALE = true
+        if ( bit.and glbsObj.flags 0x80 > 0 ) then glbsObj.VISIBILITY_TRACK = true
+        
+        return glbsObj
+    ),
+    
+    
     function SortTrack dummy_track=
     (
         

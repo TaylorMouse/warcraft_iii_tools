@@ -9,6 +9,7 @@
     | Taylor Mouse
 
     .CHANGELOG
+    | 1.6 - Support for new GLBS stuff
     | 1.5 - Export KMTA
     | 1.4 - Export TXAN
     | 1.3 - Export GLBS with texture support
@@ -108,7 +109,7 @@ STRUCT WC3_MDX800_EXPORTER
             Warcraft_III_Helpers.WriteFixedString mdx.stream "GLBS" 4
             
             writeLong mdx.stream (mdx.glbs.count * 4)
-            for g in mdx.glbs do writeLong mdx.stream g.frame
+            for g in mdx.glbs do writeLong mdx.stream ( g.nbrFrames * 1000 / 30 )
         )
     ),
     function WriteMTLS800 mdx=
@@ -664,6 +665,8 @@ STRUCT WC3_MDX800_EXPORTER
         animationrange = interval 0 100
         slidertime = 0
 
+        Warcraft_III_Helpers.GetGLBS mdx
+            
         Warcraft_III_Helpers.GetObjects mdx
 
         Warcraft_III_Helpers.GetSEQS mdx
@@ -671,7 +674,6 @@ STRUCT WC3_MDX800_EXPORTER
         Warcraft_III_Helpers.GetTEXS mdx
         Warcraft_III_Helpers.GetGEOS mdx
         Warcraft_III_Helpers.GetGEOA mdx
-        Warcraft_III_Helpers.GetGLBS mdx        
         Warcraft_III_Helpers.GetTXAN mdx
         
         mdx.stream = fOpen file "wb"
