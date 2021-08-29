@@ -1064,13 +1064,23 @@ STRUCT Warcraft_III_Helpers
     ),
     function GetKGTR obj =
     (
+
         struct anim800   ( Size = 16, nbrKeys, Type = "KGTR", LineType=1, glbsId = -1, AnimBlock = #() )  
         struct KeyValuePair ( Key, Val )
 
         local cntrl = obj.pos.controller
+        
+        local classOfController = classof cntrl
+        local lineType = 1
+        if ( classOfController == Position_XYZ )     then lineType = 0x0
+        if ( classOfController == linear_position )  then lineType = 0x1
+        if ( classOfController == TCB_position )     then lineType = 0x2
+        if ( classOfController == bezier_position )  then lineType = 0x3
+        
+        
         local pvt = at time 0f in coordsys parent obj.pos
         
-        local kgtr = anim800()
+        local kgtr = anim800 LineType:lineType
         
         local behaviorObj = Warcraft_III_Helpers.GetBehaviorObject()
         
@@ -1105,9 +1115,19 @@ STRUCT Warcraft_III_Helpers
         struct anim800   ( Size = 16, nbrKeys, Type = "KGRT", LineType=1, glbsId = -1, AnimBlock = #() )  
         struct KeyValuePair ( Key, Val )
 
-        local kgrt =  anim800()
-        
         local ctrl = obj.rotation.controller
+        
+        local classOfController = classof cntrl
+        local lineType = 1
+        if ( classOfController == Euler_XYZ )        then lineType = 0x0
+        if ( classOfController == linear_Rotation )  then lineType = 0x1
+        if ( classOfController == TCB_Rotation )     then lineType = 0x2
+        if ( classOfController == bezier_Rotation )  then lineType = 0x3
+        
+        local kgrt =  anim800 LineType:lineType
+        
+        
+        
         local rot = inverse obj.rotation
 
         local parentRot = quat 0 0 0 1
@@ -1151,7 +1171,14 @@ STRUCT Warcraft_III_Helpers
         struct anim800   ( Size = 16, nbrKeys, Type = "KGSC", LineType=1, glbsId = -1, AnimBlock = #() )  
         struct KeyValuePair ( Key, Val )
 
-        local kgsc =  anim800()
+        local classOfController = classof obj.scale.controller
+        local lineType = 1
+        if ( classOfController == ScaleXYZ )      then lineType = 0x0
+        if ( classOfController == linear_Scale )  then lineType = 0x1
+        if ( classOfController == TCB_Scale )     then lineType = 0x2
+        if ( classOfController == bezier_Scale )  then lineType = 0x3
+
+        local kgsc =  anim800 LineType = lineType
         
         kgsc.nbrKeys = numkeys obj.scale.controller
         kgsc.size += kgsc.nbrKeys * 16

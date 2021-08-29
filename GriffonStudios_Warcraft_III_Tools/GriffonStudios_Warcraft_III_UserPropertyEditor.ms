@@ -5,7 +5,7 @@
     | since the actual one only had a mere functionality anyways
     
     .COPYRIGHT
-    | © 2020 Griffon Studios
+    | © 2021 Griffon Studios
     
     .AUTHOR
     | Taylor Mouse
