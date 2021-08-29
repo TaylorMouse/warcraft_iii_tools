@@ -15,7 +15,7 @@ GLOBAL USERPROP_DEBUG = false
 
 rollout GriffonStudios_Warcraft_III_UserPropertyEditor "User Property Editor" 
     width:200 
-    height:220
+    height:320
 (
 
     local selectedObject
@@ -33,6 +33,17 @@ rollout GriffonStudios_Warcraft_III_UserPropertyEditor "User Property Editor"
         checkbox chkCollisionObject "Collision Box"
        
     )
+    group "Animation options"
+    (
+        label lblRotType "Rotation:" align:#left 
+        dropdownlist ddlRotationAnimationType items:#( "None (Euler XYZ)", "Linear", "Hermite (TCB)", "Bezier" ) align:#right width:120 offset:[0,-20] tooltip:"Change the rotation controller of the selected object"
+        label lblPosType "Position:" align:#left
+        dropdownlist ddlPositionAnimationType items:#( "None (Position XYZ)", "Linear", "Hermite (TCB)", "Bezier" ) align:#right width:120 offset:[0,-20] tooltip:"Change the position controller of the selected object"
+        label lblScaleType "Scale:" align:#left
+        dropdownlist ddlScaleAnimationType    items:#( "None (Scale XYZ)", "Linear", "Hermite (TCB)", "Bezier" ) align:#right width:120 offset:[0,-20] tooltip:"Change the scale controller of the selected object"
+
+    )
+    
     label lblTM "\xa9 2021 Taylor Mouse"
     button btnClose "Save & Close" height:45 width:190
     
@@ -51,6 +62,28 @@ rollout GriffonStudios_Warcraft_III_UserPropertyEditor "User Property Editor"
         if ( getUserProp selectedObject "BILLBOARD-LOCK-X" == true ) then ddBillBoarding.selection = 3
         if ( getUserProp selectedObject "BILLBOARD-LOCK-Y" == true ) then ddBillBoarding.selection = 4
         if ( getUserProp selectedObject "BILLBOARD-LOCK-Z" == true ) then ddBillBoarding.selection = 5
+
+        local classOfRotController = classof selectedObject.rotation.controller
+        
+        if ( classOfRotController == Euler_XYZ )        then ddlRotationAnimationType.selection = 1
+        if ( classOfRotController == Linear_Rotation )  then ddlRotationAnimationType.selection = 2
+        if ( classOfRotController == TCB_Rotation )     then ddlRotationAnimationType.selection = 3
+        if ( classOfRotController == Bezier_Rotation )  then ddlRotationAnimationType.selection = 4
+        
+        local classOfPosController = classof selectedObject.Position.controller
+        
+        if ( classOfPosController == Position_XYZ )     then ddlPositionAnimationType.selection = 1
+        if ( classOfPosController == linear_position )  then ddlPositionAnimationType.selection = 2
+        if ( classOfPosController == TCB_position )     then ddlPositionAnimationType.selection = 3
+        if ( classOfPosController == bezier_position )  then ddlPositionAnimationType.selection = 4
+        
+        local classOfScaleController = classof selectedObject.Scale.controller
+        
+        if ( classOfScaleController == ScaleXYZ )      then ddlScaleAnimationType.selection = 1
+        if ( classOfScaleController == linear_scale )  then ddlScaleAnimationType.selection = 2
+        if ( classOfScaleController == TCB_scale )     then ddlScaleAnimationType.selection = 3
+        if ( classOfScaleController == bezier_scale )  then ddlScaleAnimationType.selection = 4
+         
     )
     
     function ToggleCollisionObject =
@@ -116,6 +149,30 @@ rollout GriffonStudios_Warcraft_III_UserPropertyEditor "User Property Editor"
             setUserProp selectedObject "COLLISION-OBJECT" true
         )
         ToggleCollisionObject()
+    )
+    
+    on ddlRotationAnimationType selected index do
+    (
+        if (index == 1 ) then selectedObject.rotation.controller = Euler_XYZ()
+        if (index == 2 ) then selectedObject.rotation.controller = Linear_Rotation()
+        if (index == 3 ) then selectedObject.rotation.controller = TCB_Rotation()
+        if (index == 4 ) then selectedObject.rotation.controller = Bezier_Rotation()
+    )
+    
+    on ddlPositionAnimationType selected index do
+    (
+        if (index == 1 ) then selectedObject.Position.controller = Position_XYZ()
+        if (index == 2 ) then selectedObject.Position.controller = Linear_Position()
+        if (index == 3 ) then selectedObject.Position.controller = TCB_Position()
+        if (index == 4 ) then selectedObject.Position.controller = Bezier_Position()
+    )
+    
+    on ddlScaleAnimationType selected index do
+    (
+        if (index == 1 ) then selectedObject.Scale.controller = ScaleXYZ()
+        if (index == 2 ) then selectedObject.Scale.controller = Linear_Scale()
+        if (index == 3 ) then selectedObject.Scale.controller = TCB_Scale()
+        if (index == 4 ) then selectedObject.Scale.controller = Bezier_Scale()
     )
     
     on btnClose pressed do
