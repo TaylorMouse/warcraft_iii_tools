@@ -1198,7 +1198,7 @@ STRUCT WC3_MDX800
             local controller = Bezier_Float()
             if map.KMTA.LineType == 1 then controller = Linear_Float()
             if map.KMTA.LineType == 2 then controller = TCB_Float()
-            if map.KMTA.LineType == 2 then controller = Bezier_Float()            
+            if map.KMTA.LineType == 3 then controller = Bezier_Float()            
             
             mat.Alpha.controller = controller
             
@@ -1325,9 +1325,14 @@ STRUCT WC3_MDX800
             -- Rotation
             if ( obj.KGRT != undefined ) then 
             (
-
                 local dr = dummy name:"DummyRotationController"
                 dr.rotation.controller = b.rotation.controller
+
+                if ( obj.KGRT.lineType == 0x0 ) then  dr.rotation.controller = Euler_XYZ()
+                if ( obj.KGRT.lineType == 0x1 ) then  dr.rotation.controller = linear_Rotation()
+                if ( obj.KGRT.lineType == 0x2 ) then  dr.rotation.controller = TCB_Rotation()
+                if ( obj.KGRT.lineType == 0x3 ) then  dr.rotation.controller = bezier_Rotation()
+
                 local q0 = dr.transform
                 if b.parent != undefined then q0 = b.parent.transform
                 local prevTime = 0
@@ -1357,9 +1362,13 @@ STRUCT WC3_MDX800
             (
                 local dp = dummy name:"DummyPositionController" 
                 dp.position.controller = b.position.controller
-                local p0 = dp.transform
                 
-                --if b.parent != undefined then p0 = b.parent.transform
+                if ( obj.KGTR.lineType == 0x0 ) then  dr.position.controller = position_XYZ()
+                if ( obj.KGTR.lineType == 0x1 ) then  dr.position.controller = linear_position()
+                if ( obj.KGTR.lineType == 0x2 ) then  dr.position.controller = TCB_position()
+                if ( obj.KGTR.lineType == 0x3 ) then  dr.position.controller = bezier_position()
+                
+                local p0 = dp.transform
                 local prevTime = 0
 
                 for anim in obj.KGTR.KG do
@@ -1387,6 +1396,12 @@ STRUCT WC3_MDX800
                 
                 local ds = dummy name:"DummyScaleController" 
                 ds.scale.controller = b.scale.controller
+                
+                if ( obj.KGSC.lineType == 0x0 ) then  dr.scale.controller = scaleXYZ()
+                if ( obj.KGSC.lineType == 0x1 ) then  dr.scale.controller = linear_scale()
+                if ( obj.KGSC.lineType == 0x2 ) then  dr.scale.controller = TCB_scale()
+                if ( obj.KGSC.lineType == 0x3 ) then  dr.scale.controller = bezier_scale()
+                
                 local p0 = ds.transform
                 local prevTime = 0
                 

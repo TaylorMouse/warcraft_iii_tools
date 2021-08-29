@@ -1072,7 +1072,7 @@ STRUCT Warcraft_III_Helpers
         
         local classOfController = classof cntrl
         local lineType = 1
-        if ( classOfController == Position_XYZ )     then lineType = 0x0
+        if ( classOfController == Position_XYZ )     then lineType = 0x1
         if ( classOfController == linear_position )  then lineType = 0x1
         if ( classOfController == TCB_position )     then lineType = 0x2
         if ( classOfController == bezier_position )  then lineType = 0x3
@@ -1119,7 +1119,7 @@ STRUCT Warcraft_III_Helpers
         
         local classOfController = classof cntrl
         local lineType = 1
-        if ( classOfController == Euler_XYZ )        then lineType = 0x0
+        if ( classOfController == Euler_XYZ )        then lineType = 0x1
         if ( classOfController == linear_Rotation )  then lineType = 0x1
         if ( classOfController == TCB_Rotation )     then lineType = 0x2
         if ( classOfController == bezier_Rotation )  then lineType = 0x3
@@ -1145,7 +1145,7 @@ STRUCT Warcraft_III_Helpers
             for b = 1 to glbs.objectList.count do
             if glbs.objectList[b].objName == obj.name then 
             ( 
-                kgtr.glbsId = glbs.groupID - 1
+                kgrt.glbsId = glbs.groupID - 1
                 exit
             )
         )   
@@ -1173,12 +1173,12 @@ STRUCT Warcraft_III_Helpers
 
         local classOfController = classof obj.scale.controller
         local lineType = 1
-        if ( classOfController == ScaleXYZ )      then lineType = 0x0
+        if ( classOfController == ScaleXYZ )      then lineType = 0x1
         if ( classOfController == linear_Scale )  then lineType = 0x1
         if ( classOfController == TCB_Scale )     then lineType = 0x2
         if ( classOfController == bezier_Scale )  then lineType = 0x3
 
-        local kgsc =  anim800 LineType = lineType
+        local kgsc =  anim800 LineType:lineType
         
         kgsc.nbrKeys = numkeys obj.scale.controller
         kgsc.size += kgsc.nbrKeys * 16
@@ -1191,7 +1191,7 @@ STRUCT Warcraft_III_Helpers
             for b = 1 to glbs.objectList.count do
             if glbs.objectList[b].objName == obj.name then 
             ( 
-                kgtr.glbsId = glbs.groupID - 1
+                kgsc.glbsId = glbs.groupID - 1
                 exit
             )
         )   
