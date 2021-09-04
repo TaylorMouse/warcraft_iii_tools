@@ -1260,8 +1260,6 @@ STRUCT WC3_MDX800
     ),
     function BuildBonesAndHelpers mdx=
     (
-        
-        local boneLayer = GriffonStudios_Helpers.CreateLayer "Bones"
         local helpLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
         
         mdx.objs = #()
@@ -1269,31 +1267,48 @@ STRUCT WC3_MDX800
         if mdx.bone != undefined then
         for b in mdx.bone do
         (
-            local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
-            aBone.Name = b.name
-            aBone.showLinks = true
-            aBone.Width = 0.05
-            aBone.Height = 0.05
-            aBone.setBoneEnable false 0
-            
-            b.boneRef = aBone
-            b.boneRef.pos = mdx.pivt[b.id].translationpart
-            boneLayer.AddNode aBone
-            
-            mdx.objs[b.Id] = aBone
+            WC3_MDX800.CreateBone mdx b
         )
         if mdx.help != undefined then
         for h in mdx.help do
         (
-            local d = dummy name:h.name
-            d.showLinks = true
-            d.wirecolor = color 0 255 0
-            helpLayer.addNode d
-            d.pos = mdx.pivt[h.id].translationpart
-            h.helperRef = d
-            mdx.objs[h.id] = d
+            WC3_MDX800.CreateHelper mdx h
         )
         
+    ),
+    function CreateBone mdx b=
+    (
+        format "Building %\n" b
+        local boneLayer = GriffonStudios_Helpers.CreateLayer "Bones"
+        local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
+        aBone.Name = b.name
+        aBone.showLinks = true
+        aBone.Width = 0.05
+        aBone.Height = 0.05
+        aBone.setBoneEnable false 0
+        
+        b.boneRef = aBone
+        b.boneRef.pos = mdx.pivt[b.id].translationpart
+        boneLayer.AddNode aBone
+        mdx.objs[b.Id] = aBone
+
+    ),
+    function CreateHelper mdx b=
+    (
+        format "Building %\n" b
+        local boneLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
+        local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
+        aBone.Name = b.name
+        aBone.showLinks = true
+        aBone.Width = 0.05
+        aBone.Height = 0.05
+        aBone.setBoneEnable false 0
+        
+        b.helperRef = aBone
+        b.helperRef.pos = mdx.pivt[b.id].translationpart
+        boneLayer.AddNode aBone
+        mdx.objs[b.Id] = aBone
+
     ),
     function BuildBONE800 mdx=
     (
@@ -1363,10 +1378,10 @@ STRUCT WC3_MDX800
                 local dp = dummy name:"DummyPositionController" 
                 dp.position.controller = b.position.controller
                 
-                if ( obj.KGTR.lineType == 0x0 ) then  dr.position.controller = position_XYZ()
-                if ( obj.KGTR.lineType == 0x1 ) then  dr.position.controller = linear_position()
-                if ( obj.KGTR.lineType == 0x2 ) then  dr.position.controller = TCB_position()
-                if ( obj.KGTR.lineType == 0x3 ) then  dr.position.controller = bezier_position()
+                if ( obj.KGTR.lineType == 0x0 ) then  dp.position.controller = position_XYZ()
+                if ( obj.KGTR.lineType == 0x1 ) then  dp.position.controller = linear_position()
+                if ( obj.KGTR.lineType == 0x2 ) then  dp.position.controller = TCB_position()
+                if ( obj.KGTR.lineType == 0x3 ) then  dp.position.controller = bezier_position()
                 
                 local p0 = dp.transform
                 local prevTime = 0
@@ -1397,10 +1412,10 @@ STRUCT WC3_MDX800
                 local ds = dummy name:"DummyScaleController" 
                 ds.scale.controller = b.scale.controller
                 
-                if ( obj.KGSC.lineType == 0x0 ) then  dr.scale.controller = scaleXYZ()
-                if ( obj.KGSC.lineType == 0x1 ) then  dr.scale.controller = linear_scale()
-                if ( obj.KGSC.lineType == 0x2 ) then  dr.scale.controller = TCB_scale()
-                if ( obj.KGSC.lineType == 0x3 ) then  dr.scale.controller = bezier_scale()
+                if ( obj.KGSC.lineType == 0x0 ) then  ds.scale.controller = scaleXYZ()
+                if ( obj.KGSC.lineType == 0x1 ) then  ds.scale.controller = linear_scale()
+                if ( obj.KGSC.lineType == 0x2 ) then  ds.scale.controller = TCB_scale()
+                if ( obj.KGSC.lineType == 0x3 ) then  ds.scale.controller = bezier_scale()
                 
                 local p0 = ds.transform
                 local prevTime = 0

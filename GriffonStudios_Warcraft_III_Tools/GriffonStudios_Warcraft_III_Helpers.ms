@@ -825,10 +825,10 @@ STRUCT Warcraft_III_Helpers
                     )
                     append geoa.KGAO.KG kg
                 )
+                
+                if WC3_MDX800_DEBUG then format " - %\n" geoa
+                append mdx.geoa geoa
             )
-
-            if WC3_MDX800_DEBUG then format " - %\n" geoa
-            append mdx.geoa geoa
         )
         
     ),
@@ -998,6 +998,18 @@ STRUCT Warcraft_III_Helpers
                 )
             )
         
+        -- MESHES
+--         for obj in objects do 
+--             if (classof obj == editable_mesh ) then
+--             (   
+--                 local o = object800 Id:id Name:obj.name ObjectType:#wc3MESH Flags:0x100 objRef:obj TotalSize:96
+
+--                 o.flags = Warcraft_III_Helpers.GetFlags o.flags obj
+--                 
+--                 id +=1
+--                 append allObjects o
+--             )
+            
         /* build the hierarchy of objects */
         for x=1 to allobjects.count do
         (
@@ -1024,6 +1036,7 @@ STRUCT Warcraft_III_Helpers
             if ( obj.objectType == #wc3Bone ) then type = "Bone"
             if ( obj.objectType == #wc3HELP ) then type = "Dummy"
             
+            if ( mdx.glbs != undefined ) then 
             for glbs in mdx.glbs do 
             (
                 for g in glbs.objectList do 
@@ -1176,7 +1189,7 @@ STRUCT Warcraft_III_Helpers
         if ( classOfController == ScaleXYZ )      then lineType = 0x1
         if ( classOfController == linear_Scale )  then lineType = 0x1
         if ( classOfController == TCB_Scale )     then lineType = 0x2
-        if ( classOfController == bezier_Scale )  then lineType = 0x3
+        if ( classOfController == bezier_Scale )  then lineType = 0x1
 
         local kgsc =  anim800 LineType:lineType
         
