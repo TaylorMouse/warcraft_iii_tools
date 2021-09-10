@@ -1077,6 +1077,8 @@ STRUCT WC3_MDX800
         */
         
         WC3_MDX800.BuildMaterials800 mdx
+        
+        if ( mdx.geos != undefined ) then 
         for geo in mdx.geos do
         (
             if geo.meshRef != undefined then 
@@ -1198,7 +1200,7 @@ STRUCT WC3_MDX800
             local controller = Bezier_Float()
             if map.KMTA.LineType == 1 then controller = Linear_Float()
             if map.KMTA.LineType == 2 then controller = TCB_Float()
-            if map.KMTA.LineType == 2 then controller = Bezier_Float()            
+            if map.KMTA.LineType == 3 then controller = Bezier_Float()            
             
             mat.Alpha.controller = controller
             
@@ -1260,8 +1262,6 @@ STRUCT WC3_MDX800
     ),
     function BuildBonesAndHelpers mdx=
     (
-        
-        local boneLayer = GriffonStudios_Helpers.CreateLayer "Bones"
         local helpLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
         
         mdx.objs = #()
@@ -1269,31 +1269,48 @@ STRUCT WC3_MDX800
         if mdx.bone != undefined then
         for b in mdx.bone do
         (
-            local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
-            aBone.Name = b.name
-            aBone.showLinks = true
-            aBone.Width = 0.05
-            aBone.Height = 0.05
-            aBone.setBoneEnable false 0
-            
-            b.boneRef = aBone
-            b.boneRef.pos = mdx.pivt[b.id].translationpart
-            boneLayer.AddNode aBone
-            
-            mdx.objs[b.Id] = aBone
+            WC3_MDX800.CreateBone mdx b
         )
         if mdx.help != undefined then
         for h in mdx.help do
         (
-            local d = dummy name:h.name
-            d.showLinks = true
-            d.wirecolor = color 0 255 0
-            helpLayer.addNode d
-            d.pos = mdx.pivt[h.id].translationpart
-            h.helperRef = d
-            mdx.objs[h.id] = d
+            WC3_MDX800.CreateHelper mdx h
         )
         
+    ),
+    function CreateBone mdx b=
+    (
+        format "Building %\n" b
+        local boneLayer = GriffonStudios_Helpers.CreateLayer "Bones"
+        local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
+        aBone.Name = b.name
+        aBone.showLinks = true
+        aBone.Width = 0.05
+        aBone.Height = 0.05
+        aBone.setBoneEnable false 0
+        
+        b.boneRef = aBone
+        b.boneRef.pos = mdx.pivt[b.id].translationpart
+        boneLayer.AddNode aBone
+        mdx.objs[b.Id] = aBone
+
+    ),
+    function CreateHelper mdx b=
+    (
+        format "Building %\n" b
+        local boneLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
+        local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
+        aBone.Name = b.name
+        aBone.showLinks = true
+        aBone.Width = 0.05
+        aBone.Height = 0.05
+        aBone.setBoneEnable false 0
+        
+        b.helperRef = aBone
+        b.helperRef.pos = mdx.pivt[b.id].translationpart
+        boneLayer.AddNode aBone
+        mdx.objs[b.Id] = aBone
+
     ),
     function BuildBONE800 mdx=
     (
@@ -1325,9 +1342,14 @@ STRUCT WC3_MDX800
             -- Rotation
             if ( obj.KGRT != undefined ) then 
             (
-
                 local dr = dummy name:"DummyRotationController"
                 dr.rotation.controller = b.rotation.controller
+
+                if ( obj.KGRT.lineType == 0x0 ) then  dr.rotation.controller = Euler_XYZ()
+                if ( obj.KGRT.lineType == 0x1 ) then  dr.rotation.controller = linear_Rotation()
+                if ( obj.KGRT.lineType == 0x2 ) then  dr.rotation.controller = TCB_Rotation()
+                if ( obj.KGRT.lineType == 0x3 ) then  dr.rotation.controller = bezier_Rotation()
+
                 local q0 = dr.transform
                 if b.parent != undefined then q0 = b.parent.transform
                 local prevTime = 0
@@ -1357,9 +1379,13 @@ STRUCT WC3_MDX800
             (
                 local dp = dummy name:"DummyPositionController" 
                 dp.position.controller = b.position.controller
-                local p0 = dp.transform
                 
-                --if b.parent != undefined then p0 = b.parent.transform
+                if ( obj.KGTR.lineType == 0x0 ) then  dp.position.controller = position_XYZ()
+                if ( obj.KGTR.lineType == 0x1 ) then  dp.position.controller = linear_position()
+                if ( obj.KGTR.lineType == 0x2 ) then  dp.position.controller = TCB_position()
+                if ( obj.KGTR.lineType == 0x3 ) then  dp.position.controller = bezier_position()
+                
+                local p0 = dp.transform
                 local prevTime = 0
 
                 for anim in obj.KGTR.KG do
@@ -1387,6 +1413,12 @@ STRUCT WC3_MDX800
                 
                 local ds = dummy name:"DummyScaleController" 
                 ds.scale.controller = b.scale.controller
+                
+                if ( obj.KGSC.lineType == 0x0 ) then  ds.scale.controller = scaleXYZ()
+                if ( obj.KGSC.lineType == 0x1 ) then  ds.scale.controller = linear_scale()
+                if ( obj.KGSC.lineType == 0x2 ) then  ds.scale.controller = TCB_scale()
+                if ( obj.KGSC.lineType == 0x3 ) then  ds.scale.controller = bezier_scale()
+                
                 local p0 = ds.transform
                 local prevTime = 0
                 
@@ -1693,6 +1725,9 @@ STRUCT WC3_MDX800
     (
         format "Apply Skinning (this may take some time )\n"
         completeRedraw()
+        
+        if ( mdx.geos == undefined ) then return undefined
+        
         for geo in mdx.geos do
         (
             -- get a reference to the scene mesh
@@ -1934,6 +1969,7 @@ STRUCT WC3_MDX800
         /*
             The global animation always starts at frame 0 and the last frame on the trackbar is used for export
         */
+        if ( mdx.BONE != undefined ) then (
         for i=1 to mdx.BONE.count do
         (
             if ( mdx.BONE[i].KGSC != undefined or mdx.BONE[i].KGRT != undefined or mdx.BONE[i].KGTR != undefined ) then 
@@ -1970,7 +2006,7 @@ STRUCT WC3_MDX800
                     glbsFound = true
                 )
             )
-        )
+        ))
         
         if mdx.HELP != undefined then (
         for i=1 to mdx.HELP.count do
@@ -2063,7 +2099,7 @@ STRUCT WC3_MDX800
     (
         clearlistener()
         SetWaitCursor()
-        animationrange = interval 0 600
+        animationrange = interval 0 100
         slidertime = 0
         local stream = fOpen file "rb"
         if ( doesFileExist file != true or stream == undefined ) then return undefined

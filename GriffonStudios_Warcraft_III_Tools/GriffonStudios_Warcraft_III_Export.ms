@@ -9,6 +9,7 @@
     | Taylor Mouse
 
     .CHANGELOG
+    | 1.7 - Support for other linetypes added on objects
     | 1.6 - Support for new GLBS stuff
     | 1.5 - Export KMTA
     | 1.4 - Export TXAN
