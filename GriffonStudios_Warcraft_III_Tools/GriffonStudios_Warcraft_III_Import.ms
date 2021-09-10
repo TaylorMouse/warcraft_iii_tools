@@ -1077,6 +1077,8 @@ STRUCT WC3_MDX800
         */
         
         WC3_MDX800.BuildMaterials800 mdx
+        
+        if ( mdx.geos != undefined ) then 
         for geo in mdx.geos do
         (
             if geo.meshRef != undefined then 
@@ -1723,6 +1725,9 @@ STRUCT WC3_MDX800
     (
         format "Apply Skinning (this may take some time )\n"
         completeRedraw()
+        
+        if ( mdx.geos == undefined ) then return undefined
+        
         for geo in mdx.geos do
         (
             -- get a reference to the scene mesh
@@ -1964,6 +1969,7 @@ STRUCT WC3_MDX800
         /*
             The global animation always starts at frame 0 and the last frame on the trackbar is used for export
         */
+        if ( mdx.BONE != undefined ) then (
         for i=1 to mdx.BONE.count do
         (
             if ( mdx.BONE[i].KGSC != undefined or mdx.BONE[i].KGRT != undefined or mdx.BONE[i].KGTR != undefined ) then 
@@ -2000,7 +2006,7 @@ STRUCT WC3_MDX800
                     glbsFound = true
                 )
             )
-        )
+        ))
         
         if mdx.HELP != undefined then (
         for i=1 to mdx.HELP.count do

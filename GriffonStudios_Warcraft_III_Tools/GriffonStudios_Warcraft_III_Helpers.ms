@@ -974,6 +974,15 @@ STRUCT Warcraft_III_Helpers
                 append allObjects o
             )
         
+        -- RIBB
+        for obj in objects do 
+            if ( classof obj == WarcraftIII_Ribbon ) then
+            (
+                local o = object800 Id:id Name:obj.name ObjectType:#wc3RIBB Flags:0x4000 objRef:obj TotalSize:0
+                id +=1
+                append allObjects o
+            )
+            
         -- EVTS
         for obj in objects do
             if (classof obj == WarcraftIII_Event ) then
@@ -998,18 +1007,6 @@ STRUCT Warcraft_III_Helpers
                 )
             )
         
-        -- MESHES
---         for obj in objects do 
---             if (classof obj == editable_mesh ) then
---             (   
---                 local o = object800 Id:id Name:obj.name ObjectType:#wc3MESH Flags:0x100 objRef:obj TotalSize:96
-
---                 o.flags = Warcraft_III_Helpers.GetFlags o.flags obj
---                 
---                 id +=1
---                 append allObjects o
---             )
-            
         /* build the hierarchy of objects */
         for x=1 to allobjects.count do
         (
@@ -1138,11 +1135,7 @@ STRUCT Warcraft_III_Helpers
         if ( classOfController == bezier_Rotation )  then lineType = 0x3
         
         local kgrt =  anim800 LineType:lineType
-        
-        
-        
         local rot = inverse obj.rotation
-
         local parentRot = quat 0 0 0 1
         
         if obj.parent != undefined then parentRot = inverse obj.parent.rotation
@@ -1189,7 +1182,7 @@ STRUCT Warcraft_III_Helpers
         if ( classOfController == ScaleXYZ )      then lineType = 0x1
         if ( classOfController == linear_Scale )  then lineType = 0x1
         if ( classOfController == TCB_Scale )     then lineType = 0x2
-        if ( classOfController == bezier_Scale )  then lineType = 0x1
+        if ( classOfController == bezier_Scale )  then lineType = 0x3
 
         local kgsc =  anim800 LineType:lineType
         
@@ -1253,9 +1246,33 @@ STRUCT Warcraft_III_Helpers
                 local theKey = anim.Key * 1000 / 30
                 writeLong stream theKey
                               
-                if ( kgAnim.Type == "KGTR" ) then Warcraft_III_Helpers.WriteVector3 stream anim.Val
-                if ( kgAnim.Type == "KGRT" ) then Warcraft_III_Helpers.WriteQuat    stream anim.Val 
-                if ( kgAnim.Type == "KGSC" ) then Warcraft_III_Helpers.WriteVector3 stream anim.Val
+                if ( kgAnim.Type == "KGTR" ) then 
+                (
+                    Warcraft_III_Helpers.WriteVector3 stream anim.Val
+                    if ( kgAnim.lineType > 1 ) then
+                    (
+                        Warcraft_III_Helpers.WriteVector3 stream ([0,0,0] ) -- inTan
+                        Warcraft_III_Helpers.WriteVector3 stream ([0,0,0] ) -- outTan
+                    )
+                )
+                if ( kgAnim.Type == "KGRT" ) then 
+                ( 
+                    Warcraft_III_Helpers.WriteQuat    stream anim.Val 
+                    if ( kgAnim.lineType > 1 ) then
+                    (
+                        Warcraft_III_Helpers.WriteVector3 stream (quat 1 0 0 0 ) -- inTan
+                        Warcraft_III_Helpers.WriteVector3 stream (quat 1 0 0 0 ) -- outTan
+                    )
+                )
+                if ( kgAnim.Type == "KGSC" ) then 
+                (
+                    Warcraft_III_Helpers.WriteVector3 stream anim.Val
+                    if ( kgAnim.lineType > 1 ) then
+                    (
+                        Warcraft_III_Helpers.WriteVector3 stream ([0,0,0] ) -- inTan
+                        Warcraft_III_Helpers.WriteVector3 stream ([0,0,0] ) -- outTan
+                    )
+                )
                 
             )
             
