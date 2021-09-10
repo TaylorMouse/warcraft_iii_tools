@@ -2099,7 +2099,7 @@ STRUCT WC3_MDX800
     (
         clearlistener()
         SetWaitCursor()
-        animationrange = interval 0 600
+        animationrange = interval 0 100
         slidertime = 0
         local stream = fOpen file "rb"
         if ( doesFileExist file != true or stream == undefined ) then return undefined
