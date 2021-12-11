@@ -2099,7 +2099,7 @@ STRUCT WC3_MDX800
     (
         clearlistener()
         SetWaitCursor()
-        animationrange = interval 0 100
+        animationrange = interval 0 600
         slidertime = 0
         local stream = fOpen file "rb"
         if ( doesFileExist file != true or stream == undefined ) then return undefined
@@ -2181,3 +2181,9 @@ STRUCT WC3_MDX800
         setArrowCursor() 
     )
 )
+
+--file = @"G:\Blizzard\Warcraft III\TM Tutorials\Ribbon\ribbon_noribbon.mdx"
+--file = @"G:\Blizzard\Warcraft III\Extracted\Units\Creeps\TimberWolf\TimberWolf.mdx"
+--WC3_READONLY = false
+WC3_MDX800_DEBUG = true
+--WC3_MDX800.Import file

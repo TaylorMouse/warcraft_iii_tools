@@ -9,7 +9,8 @@
     | Taylor Mouse
 
     .CHANGELOG
-    | 1.7 - Support for other linetypes added on objects
+    | 1.8 - Support for ribbons
+    | 1.7 - Support for other types of animation controllers
     | 1.6 - Support for new GLBS stuff
     | 1.5 - Export KMTA
     | 1.4 - Export TXAN
@@ -643,6 +644,10 @@ STRUCT WC3_MDX800_EXPORTER
         )
         
     ),
+    function WriteRIBB800 mdx=
+    (
+       -- throw "Ribbon export not implemented yet!!"
+    ),
     function Export file=
     (
         if ( file == undefined ) then return undefined
@@ -691,6 +696,7 @@ STRUCT WC3_MDX800_EXPORTER
         export.WriteHELP800 mdx
         export.WriteATCH800 mdx
         export.WritePIVT800 mdx
+        export.WriteRIBB800 mdx
         export.WriteEVTS800 mdx
         export.WriteCLID800 mdx
         
