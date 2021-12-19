@@ -2185,5 +2185,5 @@ STRUCT WC3_MDX800
 --file = @"G:\Blizzard\Warcraft III\TM Tutorials\Ribbon\ribbon_noribbon.mdx"
 --file = @"G:\Blizzard\Warcraft III\Extracted\Units\Creeps\TimberWolf\TimberWolf.mdx"
 --WC3_READONLY = false
-WC3_MDX800_DEBUG = true
+--WC3_MDX800_DEBUG = true
 --WC3_MDX800.Import file
