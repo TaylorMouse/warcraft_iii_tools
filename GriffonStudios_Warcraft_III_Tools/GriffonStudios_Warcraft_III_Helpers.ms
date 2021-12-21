@@ -764,7 +764,7 @@ STRUCT Warcraft_III_Helpers
                     )
             )
 
-            geo.Size += mdx.SEQS.count * 7 * 4
+            geo.Size += geo.mats.floats * 4
             
             -- GNDX
             geo.Size += 8
