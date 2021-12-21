@@ -737,7 +737,7 @@ STRUCT Warcraft_III_Helpers
             geo.Size += 7 * 4
 
             geo.Size += 4 --> one long --> nbr of seqs
-            geo.mats.nbrFloats = mdx.SEQS.count
+            
             
             for seqs in mdx.SEQS do
             (
@@ -763,8 +763,8 @@ STRUCT Warcraft_III_Helpers
                         
                     )
             )
-
-            geo.Size += geo.mats.floats * 4
+            geo.mats.nbrFloats = geo.mats.floats.count
+            geo.Size += geo.mats.floats.count * 4
             
             -- GNDX
             geo.Size += 8
