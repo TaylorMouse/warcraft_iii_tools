@@ -898,30 +898,42 @@ STRUCT WC3_MDX800
     function ReadTXAN800 stream tag=
     (
         format "Reading %\n" tag.name
+
+        struct TXAN800 ( KTAT, KTAR, KTAS )
+        
+        local offset = tag.offset
+        fseek stream offset #seek_set
+        
+        local txans = #()
         local totalSize = tag.Size
-        local txanList = #()
         
-        struct txan800 ( size, ktat )
-        
-        local currentOffset = tag.Offset
-        while ( totalSize > 0 ) do
+        while ( ftell stream < tag.offset + tag.size ) do
         (
-            fseek stream currentOffset #seek_set
+            fseek stream offset #seek_set
             
-            local t = txan800()
-            t.size = readLong stream
+            local size = readLong stream
+            offset += size
             
-            local kg = GriffonStudios_Helpers.ReadFixedString stream 4
+            local txan = WC3Ref_TXAN()
             
-            if ( kg == "KTAT" ) then t.KTAT = Warcraft_III_Helpers.ReadVector3Anim stream --> Keys for Texture Animation Track (UVW animation)
+            for i=1 to 3 do
+            (
+                local kg = _Helper.ReadFixedString stream 4
+                if( kg == "KTAT" ) then txan.KTAT = Warcraft_III_Helpers.ReadVector3Anim stream
+                if( kg == "KTAR" ) then txan.KTAR = Warcraft_III_Helpers.ReadQuatAnim stream
+                if( kg == "KTAS" ) then txan.KTAS = Warcraft_III_Helpers.ReadVector3Anim stream
+            )
+            if ( txan.KTAT == undefined ) then fseek stream -4 #seek_cur
+            if ( txan.KTAR == undefined ) then fseek stream -4 #seek_cur
+            if ( txan.KTAS == undefined ) then fseek stream -4 #seek_cur
+            append txans txan
             
-            totalSize -= t.size
-            currentOffset = currentOffset + t.Size
+            if WC3_MDX800_DEBUG then format "%\n" txan
             
-            if WC3_MDX800_DEBUG then print t
-            
-            append txanList t
         )
+        
+        return txans
+
     ),
     function BuildLITE800 mdx=
     (
@@ -1229,7 +1241,7 @@ STRUCT WC3_MDX800
                     ( mat.Diffuse_Map.coords.u_offset.controller = Linear_Float()
                       mat.Diffuse_Map.coords.v_offset.controller = Linear_Float() )
                     
-                    if mat.LineType == 3 or val == 1 then 
+                    if mat.LineType == 3 or mat.LineType == 1 then 
                     ( mat.Diffuse_Map.coords.u_offset.controller = Bezier_Float()
                       mat.Diffuse_Map.coords.v_offset.controller = Bezier_Float() )
                     
