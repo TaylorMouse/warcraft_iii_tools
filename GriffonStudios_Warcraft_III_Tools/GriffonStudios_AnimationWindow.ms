@@ -4,14 +4,14 @@
     | Compatible with Warcraft III, Warcraft III Reforged and StarCraft II
     
     .COPYRIGHT
-    | © 2020 Griffon Studios
+    | © 2022 Griffon Studios
     
     .AUTHOR
     | Taylor Mouse
 
 */
 
-rollout GriffonStudios_AnimationWindow "Animation Window" 
+rollout GriffonStudios_AnimationWindow "Animation Window v2" 
     width:250 
     height:760
 (
@@ -198,7 +198,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window"
     
     function InitializeListView =
     (
-        format "Initializing listview ... \n"
+        --format "Initializing listview ... \n"
         lv.View = (dotNetClass "System.Windows.Forms.View").Details
         lv.FullRowSelect = true
         lv.HideSelection = false
@@ -299,7 +299,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window"
         anim.priority       = spinPriority.value as string
         anim.non_looping    = chkNonLooping.checked as string
         
-        format "%\n" anim
+        --format "%\n" anim
         
         for i=1 to keys.count by 2 do
         (
@@ -369,7 +369,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window"
     on GriffonStudios_AnimationWindow open do
     (
         
-        format "lv.ListViewItemSorter %\n" lv.ListViewItemSorter
+        --format "lv.ListViewItemSorter %\n" lv.ListViewItemSorter
         
         InitializeListView()
 

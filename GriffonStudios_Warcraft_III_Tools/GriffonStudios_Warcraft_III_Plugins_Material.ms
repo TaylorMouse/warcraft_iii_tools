@@ -153,7 +153,7 @@ plugin Material WarcraftIII_Standard
             ( Diffuse_Map.coords.u_offset.controller = Linear_Float()
               Diffuse_Map.coords.v_offset.controller = Linear_Float() )
             
-            if selectedItem == 4 or val == 1 then 
+            if selectedItem == 4 or selectedItem == 1 then 
             ( Diffuse_Map.coords.u_offset.controller = Bezier_Float()
               Diffuse_Map.coords.v_offset.controller = Bezier_Float() )
             
