@@ -89,8 +89,9 @@ STRUCT WC3_MDX800_EXPORTER
             WriteFloat mdx.stream seq.MovementSpeed
             WriteLong  mdx.stream seq.NoLoop
             WriteFloat mdx.stream seq.Rarity
-            WriteLong  mdx.stream seq.Default
-            WriteFloat mdx.stream seq.Priority
+            WriteLong  mdx.stream seq.Priority
+            local radius = ( distance seq.BBox[1] seq.BBox[2] ) / 2.0
+            WriteFloat mdx.stream radius
             
             Warcraft_III_Helpers.WriteVector3 mdx.stream seq.BBox[1]
             Warcraft_III_Helpers.WriteVector3 mdx.stream seq.BBox[2]

@@ -801,7 +801,7 @@ STRUCT WC3_MDX800
     function ReadSEQS800 stream tag=
     (
         format "Reading %\n" tag.name
-        struct seqs800 ( Name, StartFrame, EndFrame, MovementSpeed, NoLoop, Rarity,Priority,Default, BBox )
+        struct seqs800 ( Name, StartFrame, EndFrame, MovementSpeed, NoLoop, Rarity,Priority,Radius, BBox )
         
         fseek stream tag.offset #seek_set
         
@@ -823,8 +823,8 @@ STRUCT WC3_MDX800
             seq.MovementSpeed = readFloat stream
             seq.NoLoop = readLong stream
             seq.Rarity = readFloat stream
-            seq.Default = readlong stream
-            seq.Priority = readFloat stream
+            seq.Priority = readlong stream
+            seq.Radius = readFloat stream
             
             seq.BBox = #([readfloat stream,readfloat stream,readfloat stream], [readfloat stream,readfloat stream,readfloat stream] )
 
