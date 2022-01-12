@@ -4,20 +4,20 @@
     | Compatible with Warcraft III, Warcraft III Reforged and StarCraft II
     
     .COPYRIGHT
-    | © 2022 Griffon Studios
+    | © 2020 Griffon Studios
     
     .AUTHOR
     | Taylor Mouse
 
 */
 
-rollout GriffonStudios_AnimationWindow "Animation Window v2" 
+rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2" 
     width:250 
-    height:760
+--     height:760
 (
 
     dropdownlist ddlTracks "" height:20
-    dotNetControl lv "System.Windows.Forms.ListView" width:230 height:300 align:#center
+    dotNetControl lv "System.Windows.Forms.ListView" width:230 height:350 align:#center
     checkbox cbUpdateTimeLine "Update timeline" checked:true
     checkbox cbSortByTime "Sort by time" checked:true
     button btn_RefreshList "Refresh" align:#right offset:[0,-20]
@@ -60,22 +60,18 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
         checkbox chk_useTrackBar "Use start and end frame from the track bar"
     )
     
-    group "Remove selected Animation"
+    group "Other"
     (
-        button btn_delete "Remove" width:180 height:30
-    )
-
-    group "Remove note track"
-    (
+        button btn_delete "Remove selected animation" width:180 height:30
         button btn_removeNoteTrack "Remove all animations (note track)" width:180 height:30
+        button btn_ExportNoteTrack "Export note track" width:180 height:30
+        button btn_ImportNoteTrack "Import note track" width:180 height:30
     )
     
     label lblTM "© 2021 Taylor Mouse"
     
-    function SetAnimationNoteTrack anim=
+    function SetAnimationNoteTrack anim =
     (
-        
-        /* clear existing notes */
         local starAnimTrack = undefined
         if selectedAnimationTrack == undefined or selectedAnimationTrack == 0 then selectedAnimationTrack = 1
            
@@ -127,7 +123,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
             
         )
 
-        true
+        return true
     )
 
     function ResetTrackList=
@@ -173,14 +169,12 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
             keys = track.Keys
             for i=1 to keys.count by 2 do
             (
-                note = keys[i].value
+                 local note = keys[i].value
                 
-                pos = (findString note "\n") - 2
-                if (pos != undefined) then
-                (
-                    animationName = substring note 1 pos
-                    append animationNames animationName
-                )
+                local parts = filterString note "\r\n"
+                
+                if ( parts.count > 0 ) then
+                    append animationNames parts[1]
             )
             if (cbSortByTime.state == false ) then
                 animationNames = sort animationNames
@@ -338,7 +332,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
         local msg = "Are you sure you want to delete the animation ("+ selectedAnimation.Text + ")?\n\nNOTE:\nThis does not delete the actual keyframes only the entry in the list!"
         if selectedAnimationTrack == undefined or selectedAnimationTrack == 0 then selectedAnimationTrack = 1
         
-        if( querybox msg Title:"Confirm animation delete" ) then
+       -- if( querybox msg Title:"Confirm animation delete" ) then
         (
             track = getNoteTrack rootNode selectedAnimationTrack
             keys = track.Keys
@@ -366,7 +360,7 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
         )
     )
     
-    on GriffonStudios_AnimationWindow open do
+    on GriffonStudios_AnimationWindow_v2 open do
     (
         
         --format "lv.ListViewItemSorter %\n" lv.ListViewItemSorter
@@ -390,14 +384,14 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
         for i=1 to keys.count by 2 do
         (
             local note = keys[i].value
-            local pos = (findString note "\n") - 2
-            local animationName = substring note 1 pos
-            local propNote = substring note (pos + 2 ) -1
+            
+            local parts = filterString note "\r\n"
+            local animationName = parts[1]
             
             if( animationName == selectedAnimation.Text) then
             (
-                startTime = getNoteKeyTime track i
-                endTime = getNoteKeyTime track (i + 1)
+                local startTime = (getnotekeytime track i)  as integer / TicksPerFrame
+                local endTime = (getnotekeytime track (i+1)) as integer / TicksPerFrame
 
                 if ( startTime == endTime ) then endTime = startTime + 1
                 
@@ -407,25 +401,14 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
                     slidertime = startTime
                 )
 
+                txt_StartFrame.value = startTime
+                txt_EndFrame.value = endTime
+                chkNonLooping.checked = false
                 
-                sStartTime = startTime as string
-                sEndTime = endTime as string
-                
-                
-                txt_StartFrame.value = ( substring sStartTime 1 ( sStartTime.count  - 1)) as integer
-                txt_EndFrame.value = (substring sEndTime 1 ( sEndTime.count  - 1)) as integer
-                
-                local parts = filterstring propNote "\r\n ,"
-
-                    
-                spinRarity.value = parts[3] as integer
-                spinMovementSpeed.value = parts[6] as float
-                spinPriority.value = parts[18] as integer
-        
-                if parts[9] == "true" then 
-                    chkNonLooping.checked = true
-                else 
-                    chkNonLooping.checked = false
+                if parts.count >= 4 then spinRarity.value = parts[4] as integer
+                if parts.count >= 7 then spinMovementSpeed.value = parts[7] as float
+                if parts.count >= 19 then spinPriority.value = parts[19] as integer
+                if parts.count >= 10 then if parts[10] == "true" then chkNonLooping.checked = true
                 
                 exit
             )
@@ -439,4 +422,25 @@ rollout GriffonStudios_AnimationWindow "Animation Window v2"
         ResetListView()
     
     )
+    
+    on btn_ExportNoteTrack pressed do
+    (
+        if( hasNoteTracks rootNode == true ) then
+        (
+            local starAnimTrack    = getNoteTrack rootNode 1
+
+            for i=1 to starAnimTrack.keys.count by 2 do
+            (
+                note = keys[i].value
+                
+                pos = (findString note "\n") - 2
+                if (pos != undefined) then
+                (
+                    animationName = substring note 1 pos
+                    append animationNames animationName
+                )
+            )
+        )
+    )
+    
 )

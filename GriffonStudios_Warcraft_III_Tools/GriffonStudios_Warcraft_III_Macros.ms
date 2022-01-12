@@ -19,8 +19,8 @@ macroscript Animation_Window
     icon:#("GriffonStudios",1)
 (
     on execute do (
-        if(GriffonStudios_AnimationWindow != undefined) then destroydialog GriffonStudios_AnimationWindow
-            CreateDialog GriffonStudios_AnimationWindow lockwidth: true      
+        if(GriffonStudios_AnimationWindow_v2 != undefined) then destroydialog GriffonStudios_AnimationWindow_v2
+            CreateDialog GriffonStudios_AnimationWindow_v2 lockwidth: true      
     )
 )
 
