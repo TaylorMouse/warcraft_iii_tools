@@ -4,7 +4,7 @@
     | Compatible with Warcraft III, Warcraft III Reforged and StarCraft II
     
     .COPYRIGHT
-    | © 2020 Griffon Studios
+    | © 2020 - 2022 Griffon Studios
     
     .AUTHOR
     | Taylor Mouse
@@ -13,14 +13,18 @@
 
 rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2" 
     width:250 
---     height:760
 (
 
     dropdownlist ddlTracks "" height:20
     dotNetControl lv "System.Windows.Forms.ListView" width:230 height:350 align:#center
     checkbox cbUpdateTimeLine "Update timeline" checked:true
     checkbox cbSortByTime "Sort by time" checked:true
-    button btn_RefreshList "Refresh" align:#right offset:[0,-20]
+    --checkbox cbAutoPlay "Auto play animation" checked:false
+    
+    button btn_RefreshList "Refresh" align:#right offset:[0,-40] width:80
+    button btn_PlayAnimation "►" align:#right offset:[-30,0] height:25 width:25 tooltip:"Play selected animation"
+    button btn_StopAnimation "█" align:#right offset:[0,-30] height:25 width:25 tooltip:"Stop animation"
+    
     
     local leftPos = - 20
     local selectedAnimationTrack = undefined 
@@ -68,9 +72,50 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         button btn_ImportNoteTrack "Import note track" width:180 height:30
     )
     
-    label lblTM "© 2021 Taylor Mouse"
+    label lblTM "\xa9 2021 Taylor Mouse"
     
-    function SetAnimationNoteTrack anim =
+    function ExportNoteTrack= 
+    (
+        if( hasNoteTracks rootNode == true ) then
+        (
+            local output_file = getSaveFileName \
+                            caption:"Note Track Export" \
+                            types:"Note track (*.notetrack)|*.notetrack|All Files (*.*)|*.*|" \
+                            historyCategory:"NoteTrackImportExportHistory"
+
+
+            if output_file != undefined then ( 
+                local stream = fOpen output_file "wb"
+                local myTrack = getNoteTrack rootNode 1
+
+                writeLong stream myTrack.keys.count
+                
+                for key in myTrack.keys do
+                (
+                    local t =  (key.time as integer / TicksPerFrame)
+                    
+                    local note = key.value
+                    local noteParts = filterString note "\r\n"
+                    local nNotes = noteParts.Count
+                    
+                    writeLong stream t
+                    writeLong stream nNotes
+                    format "%\n" t
+                    format "%\n" nNotes
+                    for n=1 to nNotes do (
+                        format "%\n" noteParts[n]
+                        writeString stream noteParts[n]
+                    )
+                    format "\n"
+                )
+                
+                fClose stream
+                fflush stream
+            )
+        )
+    )
+
+    function SetAnimationNoteTrack anim validate=
     (
         local starAnimTrack = undefined
         if selectedAnimationTrack == undefined or selectedAnimationTrack == 0 then selectedAnimationTrack = 1
@@ -81,8 +126,9 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         if( (hasNoteTracks rootNode) == true ) then
         (
             starAnimTrack    = getNoteTrack rootNode selectedAnimationTrack
-            strLastNoteFrame = getNoteKeyTime starAnimTrack starAnimTrack.keys.count as string
-            lastNoteFrame    = substring strLastNoteFrame 1  (strLastNoteFrame.count - 1) as integer
+            if ( starAnimTrack.keys.count > 0 ) then
+                lastNoteFrame = ( getNoteKeyTime starAnimTrack starAnimTrack.keys.count ) as integer / TicksPerFrame
+                
         )
         else
         (
@@ -97,10 +143,10 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         if ( anim.start_frame >= anim.end_frame ) then isValid = false
         if ( anim.start_frame <= lastNoteFrame ) then isValid = false
         
-        if isValid == false then 
+        if isValid == false and validate == true then 
         (
             messagebox "One of the following was invalid:\nEnd Frame must be higher then the Start Frame\nThe start frame must start later then the previous end frame"
-            return undefined
+            return false
         )
         /* apply new notes */
         
@@ -204,6 +250,9 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         ResetTrackList()
     )
     
+    on btn_PlayAnimation pressed do playAnimation()
+	on btn_StopAnimation pressed do stopAnimation()
+    
     on btn_refreshList pressed do
     (
         ResetTrackList()
@@ -212,6 +261,57 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
     
     on cbSortByTime changed theState do
     (
+        ResetTrackList()
+        ResetListView()
+    )
+    
+    function ImportNoteTrack= 
+    (
+        local input_file = getOpenFileName \
+                            caption:"Note Track Import" \
+                            types:"Note track (*.notetrack)|*.notetrack|All Files (*.*)|*.*|" \
+                            historyCategory:"NoteTrackImportExportHistory"
+
+        
+        
+        if input_file == undefined then return undefined
+        
+        if( hasNoteTracks rootNode ) then
+        (
+            local nNoteTracks = numNoteTracks rootNode
+            for n=1 to nNoteTracks do 
+                deleteNoteTrack rootNode ( getNoteTrack rootNode n )
+        )
+
+        local myTrack = noteTrack ( getfilenamefile input_file )
+        
+        format "My Track %\n" myTrack.name
+        
+        addNoteTrack rootNode myTrack
+        
+        local stream = fOpen input_file "rb"
+
+        local nNotes = readLong stream
+        
+        format "Number of Notes %\n" nNotes
+        
+        for n=1 to nNotes do
+        (
+            local t = readLong stream
+            local val = ""
+            
+            local nValues = readLong stream
+            for v=1 to nValues do (
+                val += readString stream + "\r\n"
+            )
+
+            local note = addNewNoteKey myTrack t
+            note.value = val
+            
+            format "At time %: %\n" t val
+            
+        )
+        fClose stream
         ResetTrackList()
         ResetListView()
     )
@@ -262,7 +362,7 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         anim.priority       = spinPriority.value as string
         anim.non_looping    = chkNonLooping.checked as string
         
-        if ( SetAnimationNoteTrack anim == true ) then (
+        if ( SetAnimationNoteTrack anim true == true ) then (
             txt_newName.Text = anim.name
             txt_newAnimName.Text = ""
         )
@@ -274,7 +374,7 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
     
     on btn_rename pressed do
     (
-        
+        format "Updating %\n" selectedAnimation.name
         if( selectedAnimation == undefined or txt_newName.text == "") then return undefined
         if selectedAnimationTrack == undefined or selectedAnimationTrack == 0 then selectedAnimationTrack = 1
         
@@ -293,27 +393,44 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
         anim.priority       = spinPriority.value as string
         anim.non_looping    = chkNonLooping.checked as string
         
-        --format "%\n" anim
+        format "%\n" anim
         
         for i=1 to keys.count by 2 do
         (
             local note = keys[i].value
-            local pos = (findString note "\n") - 2
-            local animationName = substring note 1 pos
+            local parts = filterString note "\r\n"
+            local animationName = parts[1]
             if( animationName == selectedAnimation.Text) then
             (
+                local theKey = keys[i]
                 try 
                 (
                     deleteNoteKey keys (i+1)
                     deleteNoteKey keys i
 
-                    SetAnimationNoteTrack anim
+                    local result = SetAnimationNoteTrack anim false
+                    if ( result == false ) then
+                    (
+                        local startNote = AddNewNoteKey starAnimTrack anim.start_frame
+                        local endNote = AddNewNoteKey starAnimTrack anim.end_frame
+                        
+                        /* this is based on StarCraft 2 animation note track */
+                        local val = anim.name + "\r\n"
+                              val += "rarity = " + anim.rarity + "\r\n"
+                              val += "moveSpeed = " + anim.movement_speed + "\r\n"
+                              val += "nonLoop = " + anim.non_looping + "\r\n"
+                              val += "default_Anim = false\r\nsub_anim = false\r\ndefaultPriority = " + anim.priority
+
+                        startNote.Value = val
+                        endNote.Value = val
+                    )
                     
                     exit
                 )
                 catch 
                 (
                     format "[Error] %\n" (getCurrentException())
+                        
                 )
             )
         )
@@ -373,26 +490,29 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
     on lv ItemSelectionChanged arg do
     (
         if selectedAnimationTrack == undefined or selectedAnimationTrack == 0 then selectedAnimationTrack = 1
+        stopAnimation()
         
         selectedAnimation = arg.Item
-        selectedAnimationName = selectedAnimation.Text
+        local selectedAnimationName = selectedAnimation.Text
         txt_newName.text = selectedAnimationName
         
-        track = getNoteTrack rootNode selectedAnimationTrack
-        keys = track.Keys
+        local track = getNoteTrack rootNode selectedAnimationTrack
+        local keys = track.Keys
 
         for i=1 to keys.count by 2 do
         (
             local note = keys[i].value
-            
             local parts = filterString note "\r\n"
             local animationName = parts[1]
             
             if( animationName == selectedAnimation.Text) then
             (
+                
                 local startTime = (getnotekeytime track i)  as integer / TicksPerFrame
                 local endTime = (getnotekeytime track (i+1)) as integer / TicksPerFrame
 
+                --format "% (%-%)\n" selectedAnimationName startTime endTime
+                    
                 if ( startTime == endTime ) then endTime = startTime + 1
                 
                 if( cbUpdateTimeLine.checked ) then
@@ -405,15 +525,22 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
                 txt_EndFrame.value = endTime
                 chkNonLooping.checked = false
                 
-                if parts.count >= 4 then spinRarity.value = parts[4] as integer
-                if parts.count >= 7 then spinMovementSpeed.value = parts[7] as float
-                if parts.count >= 19 then spinPriority.value = parts[19] as integer
-                if parts.count >= 10 then if parts[10] == "true" then chkNonLooping.checked = true
+                local pos = findString note "\r\n"
                 
+                if pos != undefined then (
+                    local props = substring note (pos+2) -1
+                    parts = filterString props "\r\n "
+                    
+                    if parts.count >= 3 then spinRarity.value = parts[3] as integer
+                    if parts.count >= 6 then spinMovementSpeed.value = parts[6] as float
+                    if parts.count >= 9 then if parts[9] == "true" then chkNonLooping.checked = true
+                    if parts.count >= 18 then spinPriority.value = parts[18] as integer
+                    
+                )
                 exit
             )
         )
-
+        
     )
     
     on ddlTracks selected selectedItem do
@@ -423,24 +550,7 @@ rollout GriffonStudios_AnimationWindow_v2 "Animation Window v2"
     
     )
     
-    on btn_ExportNoteTrack pressed do
-    (
-        if( hasNoteTracks rootNode == true ) then
-        (
-            local starAnimTrack    = getNoteTrack rootNode 1
-
-            for i=1 to starAnimTrack.keys.count by 2 do
-            (
-                note = keys[i].value
-                
-                pos = (findString note "\n") - 2
-                if (pos != undefined) then
-                (
-                    animationName = substring note 1 pos
-                    append animationNames animationName
-                )
-            )
-        )
-    )
+    on btn_ExportNoteTrack pressed do ExportNoteTrack()
+    on btn_ImportNoteTrack pressed do ImportNoteTrack()
     
 )
