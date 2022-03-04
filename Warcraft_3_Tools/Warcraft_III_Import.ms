@@ -25,15 +25,15 @@
 
 
 /* Required plugins */
-fileIn "GriffonStudios_Warcraft_III_Plugins_ParticleEmitter.ms"
-fileIn "GriffonStudios_Warcraft_III_Plugins_Attachment.ms"
-fileIn "GriffonStudios_Warcraft_III_Plugins_Material.ms"
-fileIn "GriffonStudios_Warcraft_III_Plugins_Event.ms"
-fileIn "GriffonStudios_Warcraft_III_Plugins_Ribbon.ms"
-fileIn "GriffonStudios_Warcraft_III_Plugins_Behavior.ms"
+fileIn "Warcraft_III_Plugins_ParticleEmitter.ms"
+fileIn "Warcraft_III_Plugins_Attachment.ms"
+fileIn "Warcraft_III_Plugins_Material.ms"
+fileIn "Warcraft_III_Plugins_Event.ms"
+fileIn "Warcraft_III_Plugins_Ribbon.ms"
+fileIn "Warcraft_III_Plugins_Behavior.ms"
 
 /* Helper methods */
-fileIn "GriffonStudios_Warcraft_III_Helpers.ms"
+fileIn "Warcraft_III_Helpers.ms"
 fileIn "GriffonStudios_Helpers.ms"
 
 GLOBAL WC3_MDX800_DEBUG = false
@@ -528,8 +528,7 @@ STRUCT WC3_MDX800
             ))
 
             append geoa g
-            --if WC3_MDX800_DEBUG then 
-                print g
+            if WC3_MDX800_DEBUG then print g
             totalSize -= g.Size
             currentOffset += g.Size
         )
@@ -914,11 +913,11 @@ STRUCT WC3_MDX800
             local size = readLong stream
             offset += size
             
-            local txan = WC3Ref_TXAN()
+            local txan = TXAN800()
             
             for i=1 to 3 do
             (
-                local kg = _Helper.ReadFixedString stream 4
+                local kg = GriffonStudios_Helpers.ReadFixedString stream 4
                 if( kg == "KTAT" ) then txan.KTAT = Warcraft_III_Helpers.ReadVector3Anim stream
                 if( kg == "KTAR" ) then txan.KTAR = Warcraft_III_Helpers.ReadQuatAnim stream
                 if( kg == "KTAS" ) then txan.KTAS = Warcraft_III_Helpers.ReadVector3Anim stream
@@ -1100,14 +1099,6 @@ STRUCT WC3_MDX800
     ),
     function BuildMaterials800 mdx=
     (
-        
-        for x=1 to 24 do 
-        (
-            local matname = "Standard Material - " + (x as string)
-            meditMaterials[x] = standard name:matname
-        )
-        
-        
         local m = 0
         for mtl in mdx.mtls do
         (
@@ -1125,29 +1116,9 @@ STRUCT WC3_MDX800
             else
             (
                 
-                mtl.materialRef = compositematerial()
-                mtl.materialRef.name = mdx.modl.name + "_COMPOSITE_" + ( m as string )
-                
-                for y=mtl.nMaps to 9 do mtl.materialRef.mapEnables[y] = off
-                mtl.materialRef.baseMaterial = mat
-                
-                for i=2 to mtl.nMaps do 
-                (
-                    local map = mtl.maps[i]
-                    m = m + 1
-                    local submat = WC3_MDX800.CreateWC3Material mdx map m
-                    
-                    mtl.materialRef.materialList[i] = submat
-                )
-                
-                for ml in mtl.materialref.materialList do
-                (
-                    if ( ml.diffuse_map.fileName != "") then (
-                        showTextureMap ml true
-                        exit
-                    )
-                )
-                
+                local submat = WC3_MDX800.CreateWC3Material mdx mtl.maps[2] m
+                submat.ReplaceableTexture = mat.ReplaceableTexture
+                mtl.materialRef = submat
             )
             
         )
@@ -1189,7 +1160,7 @@ STRUCT WC3_MDX800
             if( doesfileexist fileName != true ) then
                 if ( sharedFolder != undefined ) then fileName = sharedFolder + file_name + ".TGA"
 
-            mat.Diffuse_Map = Bitmaptexture fileName:fileName  
+            mat.Diffuse_Map = Bitmaptexture fileName:fileName 
         )
 
         if ( tex.path == "" and tex.ReplacableId == 2 ) then --> team glow
@@ -1274,8 +1245,7 @@ STRUCT WC3_MDX800
     ),
     function BuildBonesAndHelpers mdx=
     (
-        local helpLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
-        
+       
         mdx.objs = #()
         
         if mdx.bone != undefined then
@@ -1289,16 +1259,30 @@ STRUCT WC3_MDX800
             WC3_MDX800.CreateHelper mdx h
         )
         
+        if mdx.bone != undefined then
+        for b in mdx.bone do
+        (
+            if ( b.parentBoneID > 0 ) then 
+                b.boneRef.parent = mdx.objs[b.parentBoneID]
+        )
+        if mdx.help != undefined then
+        for h in mdx.help do
+        (
+            if ( h.parentId > 0 ) then 
+                h.helperRef.parent = mdx.objs[h.parentId]
+        )
+
+        
     ),
     function CreateBone mdx b=
     (
-        format "Building %\n" b
+        --format "Building %\n" b
         local boneLayer = GriffonStudios_Helpers.CreateLayer "Bones"
         local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
         aBone.Name = b.name
         aBone.showLinks = true
-        aBone.Width = 0.05
-        aBone.Height = 0.05
+        aBone.Width = 0.0
+        aBone.Height = 0.0
         aBone.setBoneEnable false 0
         
         b.boneRef = aBone
@@ -1307,21 +1291,15 @@ STRUCT WC3_MDX800
         mdx.objs[b.Id] = aBone
 
     ),
-    function CreateHelper mdx b=
+    function CreateHelper mdx h=
     (
-        format "Building %\n" b
-        local boneLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
-        local aBone = BoneSys.CreateBone [0,0,0] [0,0,0]  [0,0,1]
-        aBone.Name = b.name
-        aBone.showLinks = true
-        aBone.Width = 0.05
-        aBone.Height = 0.05
-        aBone.setBoneEnable false 0
-        
-        b.helperRef = aBone
-        b.helperRef.pos = mdx.pivt[b.id].translationpart
-        boneLayer.AddNode aBone
-        mdx.objs[b.Id] = aBone
+        --format "Helpers %\n" h
+        local helperLayer = GriffonStudios_Helpers.CreateLayer "Helpers"
+        local aBone = Point pos:mdx.pivt[h.id].translationpart Box:on cross:off size:30 wirecolor:(color 200 200 64) name:h.name
+
+        h.helperRef = aBone
+        helperLayer.AddNode aBone
+        mdx.objs[h.Id] = aBone
 
     ),
     function BuildBONE800 mdx=
@@ -1331,20 +1309,20 @@ STRUCT WC3_MDX800
         local boneList = mdx.bone
         local bpos = mdx.pivt
         
-        -- build the hierarchy
-        for b in boneList do
-            if ( b.ParentBoneId > 0 ) then b.boneRef.parent = mdx.objs[b.parentBoneId]
-
         for obj in boneList do
         (
             local b = obj.boneRef
-
+            if DEBUG_MODE then format "Building %\n" b.name
             -- lock the animation
             addNewKey b.controller 0
-            for seq in mdx.seqs do
+            for seq in mdx.SEQS do
             (
                 addnewkey b.scale.controller seq.startFrame
                 addnewkey b.scale.controller seq.endFrame 
+                addnewkey b.rotation.controller seq.startFrame
+                addnewkey b.rotation.controller seq.endFrame 
+                addnewkey b.pos.controller seq.startFrame
+                addnewkey b.pos.controller seq.endFrame 
             )
 
             Warcraft_III_Helpers.ApplyUserProperties obj.flags b
@@ -1356,12 +1334,14 @@ STRUCT WC3_MDX800
             (
                 local dr = dummy name:"DummyRotationController"
                 dr.rotation.controller = b.rotation.controller
-
-                if ( obj.KGRT.lineType == 0x0 ) then  dr.rotation.controller = Euler_XYZ()
-                if ( obj.KGRT.lineType == 0x1 ) then  dr.rotation.controller = linear_Rotation()
-                if ( obj.KGRT.lineType == 0x2 ) then  dr.rotation.controller = TCB_Rotation()
-                if ( obj.KGRT.lineType == 0x3 ) then  dr.rotation.controller = bezier_Rotation()
-
+                
+                dr.rotation.controller = Euler_XYZ()
+                
+--                 if ( obj.KGRT.lineType == 0x0 ) then  dr.rotation.controller = Euler_XYZ()
+--                 if ( obj.KGRT.lineType == 0x1 ) then  dr.rotation.controller = linear_Rotation()
+--                 if ( obj.KGRT.lineType == 0x2 ) then  dr.rotation.controller = TCB_Rotation()
+--                 if ( obj.KGRT.lineType == 0x3 ) then  dr.rotation.controller = bezier_Rotation()
+                
                 local q0 = dr.transform
                 if b.parent != undefined then q0 = b.parent.transform
                 local prevTime = 0
@@ -1392,10 +1372,12 @@ STRUCT WC3_MDX800
                 local dp = dummy name:"DummyPositionController" 
                 dp.position.controller = b.position.controller
                 
-                if ( obj.KGTR.lineType == 0x0 ) then  dp.position.controller = position_XYZ()
-                if ( obj.KGTR.lineType == 0x1 ) then  dp.position.controller = linear_position()
-                if ( obj.KGTR.lineType == 0x2 ) then  dp.position.controller = TCB_position()
-                if ( obj.KGTR.lineType == 0x3 ) then  dp.position.controller = bezier_position()
+                dp.position.controller = position_XYZ()
+                
+--                 if ( obj.KGTR.lineType == 0x0 ) then  dp.position.controller = position_XYZ()
+--                 if ( obj.KGTR.lineType == 0x1 ) then  dp.position.controller = linear_position()
+--                 if ( obj.KGTR.lineType == 0x2 ) then  dp.position.controller = TCB_position()
+--                 if ( obj.KGTR.lineType == 0x3 ) then  dp.position.controller = bezier_position()
                 
                 local p0 = dp.transform
                 local prevTime = 0
@@ -1425,11 +1407,11 @@ STRUCT WC3_MDX800
                 
                 local ds = dummy name:"DummyScaleController" 
                 ds.scale.controller = b.scale.controller
-                
-                if ( obj.KGSC.lineType == 0x0 ) then  ds.scale.controller = scaleXYZ()
-                if ( obj.KGSC.lineType == 0x1 ) then  ds.scale.controller = linear_scale()
-                if ( obj.KGSC.lineType == 0x2 ) then  ds.scale.controller = TCB_scale()
-                if ( obj.KGSC.lineType == 0x3 ) then  ds.scale.controller = bezier_scale()
+                ds.scale.controller = scaleXYZ()
+--                 if ( obj.KGSC.lineType == 0x0 ) then  ds.scale.controller = scaleXYZ()
+--                 if ( obj.KGSC.lineType == 0x1 ) then  ds.scale.controller = linear_scale()
+--                 if ( obj.KGSC.lineType == 0x2 ) then  ds.scale.controller = TCB_scale()
+--                 if ( obj.KGSC.lineType == 0x3 ) then  ds.scale.controller = bezier_scale()
                 
                 local p0 = ds.transform
                 local prevTime = 0
@@ -1475,6 +1457,11 @@ STRUCT WC3_MDX800
             (
                 addnewkey d.scale.controller seq.startFrame
                 addnewkey d.scale.controller seq.endFrame 
+                addnewkey d.rotation.controller seq.startFrame
+                addnewkey d.rotation.controller seq.endFrame 
+                addnewkey d.pos.controller seq.startFrame
+                addnewkey d.pos.controller seq.endFrame 
+                
             )
             
             d.assumeSkinPose()
@@ -1484,6 +1471,7 @@ STRUCT WC3_MDX800
                 
                 local dr = dummy name:"DummyRotationController"
                 dr.rotation.controller = d.rotation.controller
+                dr.rotation.controller = Euler_XYZ()
                 local q0 = dr.transform
                 if d.parent != undefined then q0 = d.parent.transform
                 local prevTime = 0
@@ -1510,6 +1498,7 @@ STRUCT WC3_MDX800
             (
                     local dp = dummy name:"DummyPositionController" 
                     dp.position.controller = d.position.controller
+                    dp.position.controller = position_XYZ()
                     local p0 = dp.transform
                     local prevTime = 0
 
@@ -1604,16 +1593,15 @@ STRUCT WC3_MDX800
             -- CUBE
             if(cl.CollisionType == 0 ) then 
             (
-                local diameter = distance cl.startPosition cl.EndPosition
-                local radius = diameter / 2.0 * 0.8
-                clObj = Sphere radius:radius name:cl.name pos:cl.startPosition
+                clObj = Warcraft_III_Helpers.CreateCollisionBox #(cl.StartPosition, cl.EndPosition )
+                clObj.name = cl.name
             )
             
             -- PLANE
             if(cl.CollisionType == 1 ) then 
             (
-                local x = distance [cl.startPosition.x,0,0] [cl.EndPosition.x,0,0]
-                local y = distance [0,cl.startPosition.y,0] [0,cl.EndPosition.y,0]
+                local x = distance [cl.startPosition.x,0,0] [cl.EndPosition.x,0,0] * -1
+                local y = distance [0,cl.startPosition.y,0] [0,cl.EndPosition.y,0] * -1
                 
                 clObj = Plane length:x width:y name:cl.name pos:cl.startPosition
             )
@@ -1621,7 +1609,7 @@ STRUCT WC3_MDX800
             -- SPHERE
             if(cl.CollisionType == 2 ) then
             (
-                clObj = Sphere radius:cl.Radius name:cl.name pos:cl.startPosition
+                clObj = Sphere radius:cl.Radius name:cl.name --pos:cl.startPosition
             )
             
             -- Cylinder
@@ -1644,6 +1632,7 @@ STRUCT WC3_MDX800
             
             if ( cl.KGRT != undefined ) then 
             (
+                at time 0 in coordsys local clObj.rotation = cl.KGRT.KG[1].point
                 
                 for anim in cl.KGRT.KG do
                 (
@@ -1652,7 +1641,6 @@ STRUCT WC3_MDX800
                     
                     with animate on at time t in coordsys mtrx clObj.rotation = q
                 )
-                    
             )
             
             if ( cl.KGTR != undefined ) then 
@@ -1667,6 +1655,21 @@ STRUCT WC3_MDX800
                     if ( prevTime == t ) then continue else prevTime = t
                     
                     with animate on at time t in coordsys mtrx clObj.pos = p
+                )
+                    
+            )
+            
+            if ( cl.KGSC != undefined ) then 
+            (
+                local prevTime = 0
+                for anim in cl.KGSC.KG do
+                (
+                    local t = anim.time + 10
+                    local p = anim.Point
+                    
+                    if ( prevTime == t ) then continue else prevTime = t
+                    
+                    with animate on at time t clObj.scale = p
                 )
                     
             )
@@ -1712,12 +1715,12 @@ STRUCT WC3_MDX800
         local layer = GriffonStudios_Helpers.CreateLayer "Bounding Box"
         
         local obj = GriffonStudios_Helpers.BuildBoundingBox mdx.modl.bbox
-        obj.name = "MODL - " + mdx.modl.name
-        freeze obj
-        obj.boxmode = true
-        obj.wirecolor = color 100 100 100
-        layer.addNode obj
-        
+--         obj.name = "MODL - " + mdx.modl.name
+--         freeze obj
+--         obj.boxmode = true
+--         obj.wirecolor = color 100 100 100
+--         layer.addNode obj
+--         
         if mdx.modl.radius > 0 then 
         (
             local pos = obj.max.z/2.0
@@ -1729,6 +1732,7 @@ STRUCT WC3_MDX800
             obj2.castShadows = off
             obj2.receiveshadows = off
             layer.addNode obj2
+            delete obj
         )
         
         
@@ -1736,7 +1740,6 @@ STRUCT WC3_MDX800
     function ApplySkinning mdx=
     (
         format "Apply Skinning (this may take some time )\n"
-        completeRedraw()
         
         if ( mdx.geos == undefined ) then return undefined
         
@@ -1770,7 +1773,10 @@ STRUCT WC3_MDX800
                     for u=1 to geo.uniqueBoneIds.count do
                     (
                         local uniqueId = geo.uniqueBoneIds[u]
-                        if uniqueId == boneRefId then append boneIds u
+                        if uniqueId == boneRefId then (
+                            append boneIds u
+                            exit
+                        )
                     )
                 )
                 
@@ -1786,7 +1792,7 @@ STRUCT WC3_MDX800
             )
             update obj
         )
-        completeRedraw()
+        redrawViews()
         
     ),
     function BuildCAMS800 mdx=
@@ -2111,7 +2117,7 @@ STRUCT WC3_MDX800
     (
         clearlistener()
         SetWaitCursor()
-        animationrange = interval 0 600
+        animationrange = interval 0 100
         slidertime = 0
         local stream = fOpen file "rb"
         if ( doesFileExist file != true or stream == undefined ) then return undefined
@@ -2158,7 +2164,7 @@ STRUCT WC3_MDX800
             */
 
         )
-        
+
         fclose stream
         if WC3_MDX800_DEBUG then WC3_MDX = mdx
         if WC3_READONLY == false then 
@@ -2184,7 +2190,8 @@ STRUCT WC3_MDX800
               PREM
               PRE2
             */
-            
+            Warcraft_III_Helpers.ZRotation -90
+            deselect $
         )
         format "Done!\n"
         gc()
@@ -2193,9 +2200,3 @@ STRUCT WC3_MDX800
         setArrowCursor() 
     )
 )
-
---file = @"G:\Blizzard\Warcraft III\TM Tutorials\Ribbon\ribbon_noribbon.mdx"
---file = @"G:\Blizzard\Warcraft III\Extracted\Units\Creeps\TimberWolf\TimberWolf.mdx"
---WC3_READONLY = false
---WC3_MDX800_DEBUG = true
---WC3_MDX800.Import file
