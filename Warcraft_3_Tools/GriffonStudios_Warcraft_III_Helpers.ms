@@ -12,19 +12,45 @@
 
 STRUCT Warcraft_III_Helpers
 (
+    function ZRotation rot=
+    (
+        select $*
+        group selection name:"MyGroup" select:true
+        $MyGroup.pivot = [0,0,0]
+        rotate $MyGroup (angleaxis rot [0,0,1])
+        ungroup $MyGroup
+        
+        true
+    ),
+    function CreateCollisionBox points=
+    (
+        local c1 = points[1]
+        local c2 = points[2]
+        
+        local verts = #()
+        verts[1] = [c1.x,c1.y,c1.z]
+        verts[2] = [c2.x,c1.y,c1.z]
+        verts[3] = [c1.x,c2.y,c1.z]
+        verts[4] = [c2.x,c2.y,c1.z]
+        verts[5] = [c1.x,c1.y,c2.z]
+        verts[6] = [c2.x,c1.y,c2.z]
+        verts[7] = [c1.x,c2.y,c2.z]
+        verts[8] = [c2.x,c2.y,c2.z]
+        
+        local faces = #([1,3,4],[4,2,1],[5,6,8],[8,7,5],[1,2,6],[6,5,1],[2,4,8],[8,6,2],[4,3,7],[7,8,4],[3,1,5],[5,7,3])
+
+        local m = mesh vertices:verts faces:faces
+        
+        for f=1 to m.numFaces do setFaceSmoothGroup m f 0
+        
+        m
+    ),
+    
     function ReadVector3Anim stream=
     (
-        /*
-        .INFO
-        | LineType:
-        |   NO_INTERP = 0x0
-        |   LINEAR    = 0x1
-        |   HERMITE   = 0x2
-        |   BEZIER    = 0x3
-
-        */
-        struct anim800 ( numPts, LineType, glbsId, KG )
-        struct kg800   ( Time, Point, inTan, outTan, LineType )
+        struct anim800 ( numPts, LineType, glbsId, KG )  
+        struct kg800   ( Time, Point, inTan, outTan, LineType ) 
+        
         local anim = anim800()
         local kg = #()
         
@@ -38,7 +64,6 @@ STRUCT Warcraft_III_Helpers
             
             k.Time = GriffonStudios_Helpers.RoundToFrame ( ReadLong stream )
             k.Point = [readFloat stream, readFloat stream, readFloat stream]
-            k.LineType = anim.lineType
 
             if( anim.lineType > 1)  then
             (
@@ -50,6 +75,7 @@ STRUCT Warcraft_III_Helpers
         anim.KG = kg
         return anim
     ),
+    
     function ReadQuatAnim stream=
     (
         struct anim800 ( numPts, LineType, glbsId, KG )
@@ -583,27 +609,12 @@ STRUCT Warcraft_III_Helpers
         local mtls =  mdx.mtls
             
         for obj in objects do
-        (
             if ( classof obj == editable_mesh ) then
-            (
                 if ( obj.ishidden == false ) then
-                (
-                    if ( classof obj.material == WarcraftIII_Standard or
-                          ( 
-                            classof obj.material == CompositeMaterial and 
-                            classof obj.material.materialList[1] == WarcraftIII_Standard and
-                            classof obj.material.materialList[2] == WarcraftIII_Standard 
-                          )
-                        ) then
-                        (
-                            local geo = geo800 meshRef:obj
-                            append geos geo
-                        )
-                )
-            )
-        )
+                    if ( classof obj.material == WarcraftIII_Standard  ) then
+                            append geos ( geo800 meshRef:obj )
         
-        /* for each mesh in this list of meshed do */
+        /* for each mesh in this list of meshes do */
         for geo in geos do
         (
             format "Reading data from %\n" geo.meshRef.name
@@ -946,7 +957,7 @@ STRUCT Warcraft_III_Helpers
 
         -- BONE
         for obj in objects do 
-            if (classof obj == boneGeometry ) then
+            if (classof obj == boneGeometry or classof obj == Dummy or classof obj == SplineShape or  classof obj == Point ) then
             (   
                 local o = object800 Id:id Name:obj.name ObjectType:#wc3BONE Flags:0x100 objRef:obj TotalSize:96
 
@@ -957,13 +968,13 @@ STRUCT Warcraft_III_Helpers
             )
 
         -- HELP
-        for obj in objects do
-            if (classof obj == Dummy or classof obj == SplineShape ) then
-            (
-                local o = object800 Id:id Name:obj.name ObjectType:#wc3HELP Flags:0x00 objRef:obj TotalSize:96
-                id +=1
-                append allObjects o
-            )
+--         for obj in objects do
+--             if (classof obj == Dummy or classof obj == SplineShape ) then
+--             (
+--                 local o = object800 Id:id Name:obj.name ObjectType:#wc3HELP Flags:0x00 objRef:obj TotalSize:96
+--                 id +=1
+--                 append allObjects o
+--             )
         
         -- ATCH
         for obj in objects do
