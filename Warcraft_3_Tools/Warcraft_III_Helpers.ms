@@ -609,27 +609,12 @@ STRUCT Warcraft_III_Helpers
         local mtls =  mdx.mtls
             
         for obj in objects do
-        (
             if ( classof obj == editable_mesh ) then
-            (
                 if ( obj.ishidden == false ) then
-                (
-                    if ( classof obj.material == WarcraftIII_Standard or
-                          ( 
-                            classof obj.material == CompositeMaterial and 
-                            classof obj.material.materialList[1] == WarcraftIII_Standard and
-                            classof obj.material.materialList[2] == WarcraftIII_Standard 
-                          )
-                        ) then
-                        (
-                            local geo = geo800 meshRef:obj
-                            append geos geo
-                        )
-                )
-            )
-        )
+                    if ( classof obj.material == WarcraftIII_Standard  ) then
+                            append geos ( geo800 meshRef:obj )
         
-        /* for each mesh in this list of meshed do */
+        /* for each mesh in this list of meshes do */
         for geo in geos do
         (
             format "Reading data from %\n" geo.meshRef.name
@@ -972,7 +957,7 @@ STRUCT Warcraft_III_Helpers
 
         -- BONE
         for obj in objects do 
-            if (classof obj == boneGeometry ) then
+            if (classof obj == boneGeometry or classof obj == Dummy or classof obj == SplineShape or  classof obj == Point ) then
             (   
                 local o = object800 Id:id Name:obj.name ObjectType:#wc3BONE Flags:0x100 objRef:obj TotalSize:96
 
@@ -983,13 +968,13 @@ STRUCT Warcraft_III_Helpers
             )
 
         -- HELP
-        for obj in objects do
-            if (classof obj == Dummy or classof obj == SplineShape ) then
-            (
-                local o = object800 Id:id Name:obj.name ObjectType:#wc3HELP Flags:0x00 objRef:obj TotalSize:96
-                id +=1
-                append allObjects o
-            )
+--         for obj in objects do
+--             if (classof obj == Dummy or classof obj == SplineShape ) then
+--             (
+--                 local o = object800 Id:id Name:obj.name ObjectType:#wc3HELP Flags:0x00 objRef:obj TotalSize:96
+--                 id +=1
+--                 append allObjects o
+--             )
         
         -- ATCH
         for obj in objects do

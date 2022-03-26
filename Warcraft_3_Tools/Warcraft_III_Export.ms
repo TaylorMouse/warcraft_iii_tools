@@ -67,7 +67,7 @@ STRUCT WC3_MDX800_EXPORTER
         
         writefloat mdx.stream radius
 
-        local bbox = Warcraft_III_Helpers.GetMODLBoundingBoxBetweenFrames 0 1
+        local bbox = Warcraft_III_Helpers.GetMODLBoundingBoxBetweenFrames 0 10000
         
         Warcraft_III_Helpers.WriteVector3 mdx.stream bbox[1]
         Warcraft_III_Helpers.WriteVector3 mdx.stream bbox[2]
@@ -101,13 +101,16 @@ STRUCT WC3_MDX800_EXPORTER
     ),
     function WriteGLBS800 mdx=
     (
-        if mdx.glbs == undefined then return undefined
+        format "Writing GLBS\n"
+        Warcraft_III_Helpers.WriteFixedString mdx.stream "GLBS" 4
+
+
+        if mdx.glbs == undefined or mdx.glbs.count == 0 then (
+            writeLong mdx.stream 0
+            return mdx
+        )
       
         if mdx.glbs.count > 0 then (
-        
-            format "Writing GLBS\n"
-            Warcraft_III_Helpers.WriteFixedString mdx.stream "GLBS" 4
-            
             writeLong mdx.stream (mdx.glbs.count * 4)
             for g in mdx.glbs do writeLong mdx.stream ( g.nbrFrames * 1000 / 30 )
         )
@@ -355,8 +358,9 @@ STRUCT WC3_MDX800_EXPORTER
             writeLong mdx.stream geo.MATS.sectionGroupId
             writeLong mdx.stream geo.MATS.sectionGroupType
             for f=1 to 7 do writeFloat mdx.stream geo.MATS.sevenFloats[f]
-            writeLong mdx.stream geo.MATS.nbrFloats
-            for f=1 to geo.MATS.nbrFloats*7 do writeFloat mdx.stream geo.MATS.floats[f]
+            writeLong mdx.stream ( geo.MATS.nbrFloats / 7 )
+            
+            for f=1 to geo.MATS.nbrFloats do writeFloat mdx.stream geo.MATS.floats[f]
             
             Warcraft_III_Helpers.WriteFixedString mdx.stream "UVAS" 4
             writeLong mdx.stream 1

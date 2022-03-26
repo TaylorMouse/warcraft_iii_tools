@@ -724,7 +724,7 @@ STRUCT WC3_MDX800
                             append uvs ( [readFloat stream, 1.0 - readFloat stream, 0.0] )
                         append geo.UVS uvs
                     )
-                    --format "% %\n" header amount
+                    format "% %\n" header amount
                 )
             )
 
