@@ -15,35 +15,30 @@ struct GriffonStudios_Helpers
     /* get all unique keys from all objects */
     function GetAllAnimatedKeyFrames=
     (
+        clearSelection()
         local uniqueKeys = #()
         for obj in objects do
         (
-            
-                --print obj.Name
-                --if(obj.Name == "bone_turret" ) then 
+            try (
                 for i=1 to obj.numSubs do 
                 (
                     if obj[i].Keys != undefined then
                     (
-                        
                         for j=1 to obj[i].numsubs do
                         (
                             if obj[i][j].Keys != undefined then
                             (
-                                --print obj[i][j].keys
                                 for k in obj[i][j].keys do
                                 (
-                                    local strTime = k.time as string
-                                    local iTime = substring strTime 1 (strTime.count - 1 ) as integer
-                                    
+                                    local iTime = k.time as integer / TicksPerFrame
                                     appendifunique uniqueKeys iTime
-                                    
                                 )
                             )
                         )
                     )
                     
                 )
+            ) catch()
         )
 
         local sortedKeys = sort uniqueKeys   
