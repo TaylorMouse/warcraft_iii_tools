@@ -1,8 +1,0 @@
-F:\Blizzard\Warcraft III\TM Tutorials\Anduin_Disguised\anduin_Ik.mdx
-F:\Blizzard\Warcraft III\TM Tutorials\Anduin_Disguised\anduin_tc.mdx
-F:\Blizzard\Warcraft III\TM Tutorials\Anduin_Disguised\anduin.mdx
-F:\Blizzard\Warcraft III\TM Tutorials\Anduin_Disguised\anduin_dds.mdx
-anduin.mdx
-F:\Blizzard\Warcraft III\Warcraft III Models\Abomination\export.mdx
-F:\Blizzard\Warcraft III\Warcraft III Models\Abomination\Abomination.mdx
-F:\Blizzard\Warcraft III\Extracted\Units\Undead\Abomination\Abomination.mdx
