@@ -423,39 +423,27 @@ STRUCT Warcraft_III_Helpers
         (
             if ( obj.material != undefined ) then
             (
-                if ( classof obj.material == compositematerial) then 
-                (
-                    for subMat in obj.material.materialList do
-                    (
-                        if ( classof subMat == WarcraftIII_Standard ) then
-                        (
-                            local tex = texs800()
-                            tex.replacableId = subMat.ReplaceableTexture - 1
-                            if( tex.replacableId == 0 ) then 
-                            (
-                                tex.path = ( getfilenamefile subMat.Diffuse_map.filename ) + WC3_TEXTURE_EXPORT_EXTENSION
-                                tex.original_path = subMat.Diffuse_map.filename
-                            )
-                            if ( tex.replacableId == 2 ) then tex.flags = 0
-                            tex.check = tex.replacableId as string + tex.path + tex.flags as string
-                            append texs tex
-                        )
-                    )
-                )
                 if ( classof obj.material == WarcraftIII_Standard ) then
                 (
                     local tex = texs800()
                     tex.replacableId = obj.material.ReplaceableTexture - 1
-                    if( tex.replacableId == 0 ) then 
+                    
+                    -- TEAM COLOR
+                    if ( tex.replacableId == 1 ) then 
                     (
-                        tex.path = ( getfilenamefile obj.material.Diffuse_map.filename ) + WC3_TEXTURE_EXPORT_EXTENSION
-                        tex.original_path = obj.material.Diffuse_map.filename
+                        local tcTex = texs800 replacableId:1 
+                        tcTex.check = tex.replacableId as string + tex.path + tex.flags as string
+                        append texs tcTex
+                        
                     )
+                    tex.path = ( getfilenamefile obj.material.Diffuse_map.filename ) + WC3_TEXTURE_EXPORT_EXTENSION
+                    tex.original_path = obj.material.Diffuse_map.filename
+                    
                     if ( tex.replacableId == 2 ) then tex.flags = 0
+                    
                     tex.check = tex.replacableId as string + tex.path + tex.flags as string
                     append texs tex
                 )
-                
             )
         )
         uniqueTexs = #()
@@ -481,7 +469,8 @@ STRUCT Warcraft_III_Helpers
         )
         mdx.texs = uniqueTexs
         
-        if WC3_MDX800_DEBUG then  for t in uniqueTexs do print t
+        --if WC3_MDX800_DEBUG then  
+            for t in uniqueTexs do print t
         
     ),
     /* get a unique list of materials */
@@ -493,10 +482,6 @@ STRUCT Warcraft_III_Helpers
         (
             if ( obj.material != undefined ) then 
             (
-                if ( classof obj.material == compositeMaterial ) then
-                (
-                    if( classof obj.material.materialList[1] == WarcraftIII_Standard ) then appendIfUnique uniqueMatList obj.material
-                )
                 if ( classof obj.material == WarcraftIII_Standard ) then appendIfUnique uniqueMatList obj.material
             )
         )
@@ -505,7 +490,9 @@ STRUCT Warcraft_III_Helpers
         for um in uniqueMatList do
             append matList ( mtls800 materialRef:um txanId:-1 )
         
-        if WC3_MDX800_DEBUG then for m in matList do print m
+        --if WC3_MDX800_DEBUG then 
+            for m in matList do print m
+                
         mdx.mtls = matList
     ),
     /* get the weights from the vertices per mesh */
@@ -652,6 +639,7 @@ STRUCT Warcraft_III_Helpers
             local vertices = #()
             local normals = #()
             local uvs = #()
+            WC3_INVERT_UVW = true
             for i=1 to tvVertices.count do
             (
                 local uv = getTvert theMesh i
@@ -876,13 +864,13 @@ STRUCT Warcraft_III_Helpers
                 txanbIndex += 1
                 local ktat = anim800 numPts:uniqueFrames.count LineType:( mat.LineType - 1 )
                 
-                for glbs in mdx.GLBS do
-                (
-                    for obj in glbs.objectList do
-                    (
-                        if ( obj.type == "material" and obj.objName == mat.name ) then ktat.glbsId = glbs.groupID - 1
-                    )
-                )
+--                 for glbs in mdx.GLBS do
+--                 (
+--                     for obj in glbs.objectList do
+--                     (
+--                         if ( obj.type == "material" and obj.objName == mat.name ) then ktat.glbsId = glbs.groupID - 1
+--                     )
+--                 )
                     
                 for frame in uniqueFrames do
                 (

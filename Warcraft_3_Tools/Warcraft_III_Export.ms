@@ -123,24 +123,16 @@ STRUCT WC3_MDX800_EXPORTER
         local size = 0
         for mat in mdx.mtls do
         (
-            if classof mat.materialRef == compositeMaterial then
-            (
-                if ( classof mat.materialRef.materialList[1] == WarcraftIII_Standard and 
-                     classof mat.materialRef.materialList[1] == WarcraftIII_Standard ) then 
-                (
-                    size += 76
-                    for i=1 to 2 do
-                    (
-                        if ( mat.materialRef.materialList[i].Alpha.controller != undefined ) then 
-                            size += 16 + ( 8 * mat.materialRef.materialList[i].Alpha.controller.keys.count)
-                    )
-                    
-                )
-            )
             if ( classof mat.materialRef == WarcraftIII_Standard ) then
             (
-                size += 48
-                if ( mat.materialRef.Alpha.controller != undefined ) then size += 16 + ( 8 * mat.materialRef.Alpha.controller.keys.count)
+                if ( mat.materialRef.ReplaceableTexture == 2 ) then 
+                    size += 76
+                else
+                    size += 48
+                
+                if ( mat.materialRef.Alpha.controller != undefined ) then 
+                    size += 16 + ( 8 * mat.materialRef.Alpha.controller.keys.count)
+
             )
         )
         
@@ -149,38 +141,39 @@ STRUCT WC3_MDX800_EXPORTER
         for i=1 to mdx.mtls.count do
         (
             local mat = mdx.mtls[i].materialRef
-            
-            if classof mat == compositeMaterial then --> Team color or .fli
-            (
-                
-                writeLong mdx.stream 76 --> size --> currently only supports 2 sub materials
-                writeLong mdx.stream 0 --> priority
-                writeLong mdx.stream 0 --> flags --> TODO rework this, check the lava elemental for more info
-                Warcraft_III_Helpers.WriteFixedString mdx.stream "LAYS" 4 
-                writeLong mdx.stream 2 --> nMaps
-                
-                for j=1 to 2 do
+            if ( classof mat == WarcraftIII_Standard ) then(
+                if ( mat.ReplaceableTexture == 2 ) then --> Team color or .fli
                 (
-                    local path = mat.materialList[j].diffuse_map.fileName
-                    WC3_MDX800_EXPORTER.WriteLAYS800 mdx path mat.materialList[j] mdx.mtls[i].txanId
+                    
+                    writeLong mdx.stream 76 --> size --> currently only supports 2 sub materials
+                    writeLong mdx.stream 0 --> priority
+                    writeLong mdx.stream 0 --> flags --> TODO rework this, check the lava elemental for more info
+                    Warcraft_III_Helpers.WriteFixedString mdx.stream "LAYS" 4 
+                    writeLong mdx.stream 2 --> nMaps
+                    
+                    local path = mat.diffuse_map.fileName
+                    
+                    WC3_MDX800_EXPORTER.WriteLAYS800 mdx path mat mdx.mtls[i].txanId
+                    
+                    
                 )
-            )
-            if ( classof mat == WarcraftIII_Standard ) then
-            (
-                local laySize = 48
-                if ( mat.Alpha.controller != undefined ) then 
+                else
                 (
-                    laySize = laySize + 16 + ( mat.Alpha.controller.keys.count * 8 )
+                    local laySize = 48
+                    if ( mat.Alpha.controller != undefined ) then 
+                    (
+                        laySize = laySize + 16 + ( mat.Alpha.controller.keys.count * 8 )
+                    )
+                    
+                    writeLong mdx.stream laySize --> size 
+                    writeLong mdx.stream 0 --> priority
+                    writeLong mdx.stream 0 --> flags
+                    Warcraft_III_Helpers.WriteFixedString mdx.stream "LAYS" 4 
+                    writeLong mdx.stream 1 --> nMaps
+                    local path = mat.diffuse_map.fileName
+                    WC3_MDX800_EXPORTER.WriteLAYS800 mdx path mat mdx.mtls[i].txanId
+                   
                 )
-                
-                writeLong mdx.stream laySize --> size 
-                writeLong mdx.stream 0 --> priority
-                writeLong mdx.stream 0 --> flags
-                Warcraft_III_Helpers.WriteFixedString mdx.stream "LAYS" 4 
-                writeLong mdx.stream 1 --> nMaps
-                local path = mat.diffuse_map.fileName
-                WC3_MDX800_EXPORTER.WriteLAYS800 mdx path mat mdx.mtls[i].txanId
-               
             )
         )
     ),
@@ -200,6 +193,27 @@ STRUCT WC3_MDX800_EXPORTER
             format "KMTA % \n" miniSize
         )
 
+        if ( mat.ReplaceableTexture == 2 ) then
+        (
+            writeLong mdx.stream 28
+            writeLong mdx.stream 0
+            writeLong mdx.stream 17
+            local texsID = 0
+            for t=1 to mdx.texs.count do 
+            (
+                if mdx.texs[t].replacableId == 1 and mdx.texs[t].path == "" then 
+                (
+                    texsID = t - 1
+                    exit
+                )
+            )
+            writeLong mdx.stream texsID --> matching texture id
+            writeLong mdx.stream txanId #unsigned --> TXAN ID
+            writeLong mdx.stream 0 --> uv layer
+            writeFloat mdx.stream ( mat.alpha / 100.0)
+        )
+        
+        
         writeLong mdx.stream miniSize --> size
         writeLong mdx.stream (mat.FilterMode - 1) --> filtermode
         
@@ -213,6 +227,7 @@ STRUCT WC3_MDX800_EXPORTER
         if mat.unselectable then shadingFlags += 0x100
         
         writeLong mdx.stream shadingFlags
+        --writeLong mdx.stream 1
         
         local replacableId = mat.ReplaceableTexture - 1
 
@@ -234,6 +249,9 @@ STRUCT WC3_MDX800_EXPORTER
         writeLong mdx.stream txanId #unsigned --> TXAN ID
         writeLong mdx.stream 0 --> uv layer
         writeFloat mdx.stream ( mat.alpha / 100.0)
+        
+
+        
         
         -- is this part of a glbs ?
         local glbsId = -1
