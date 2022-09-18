@@ -32,8 +32,9 @@
 |Collision Object Toggle| Used for toggeling all collision objects at the same time|
 |User Properties|Used to display and set specific properties of an object,like collision object &  billboarding|
 |Tools Window|Contains the major functionality in one window, like import, export, material editor cleanup, and some nifty stuff for using with IK Solvers ( see upcomig tutorial and guidelines for more info)
-
-
+|World Of Warcraft| I use this as the icon for importing .m2 files
+|Diablo III Animation| I use this as the icon for importing .ani files
+|Diablo III| I use this as the icon for importing .app files
 ## Starting Max
 
 - This will install the following plugins:
