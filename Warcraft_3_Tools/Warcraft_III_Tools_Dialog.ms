@@ -88,8 +88,9 @@ rollout Warcraft_III_Tools_Dialog "Warcraft 3 Tools" width:250 height:500
         
         GLOBAL WC3_MDX800_DEBUG = false
         GLOBAL WC3_DEBUG = false
-        GLOBAL WC3_INVERT_UVW = false
-        ddl_Extension.selection = 1
+        GLOBAL WC3_INVERT_UVW = true
+        cbx_InvertUVW.checked = true
+        ddl_Extension.selection = 3
         
         local sharedFolder = getinisetting configFile "WarcraftIII" "SharedTextureFolder"
         if sharedFolder == undefined then txt_sharedTextureFolder.text = "" else txt_sharedTextureFolder.text = sharedFolder
