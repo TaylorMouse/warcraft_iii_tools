@@ -1312,7 +1312,7 @@ STRUCT WC3_MDX800
         for obj in boneList do
         (
             local b = obj.boneRef
-            if DEBUG_MODE then format "Building %\n" b.name
+            if WC3_MDX800_DEBUG then format "Building %\n" b.name
             -- lock the animation
             addNewKey b.controller 0
             for seq in mdx.SEQS do
